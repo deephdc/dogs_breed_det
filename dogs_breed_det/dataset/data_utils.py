@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import dogs_breed.config as cfg
+import dogs_breed_det.config as cfg
 from sklearn.datasets import load_files       
 from keras.utils import np_utils
 from os import path

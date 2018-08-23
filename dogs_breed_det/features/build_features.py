@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import dogs_breed.config as cfg
+import dogs_breed_det.config as cfg
 from os import path
 
 def build_features(network = 'Resnet50'):

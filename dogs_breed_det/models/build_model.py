@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions to build neural network model"""
 import numpy as np
-import dogs_breed.features.build_features as bfeatures
+import dogs_breed_det.features.build_features as bfeatures
 from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D
 from keras.layers import Dropout, Flatten, Dense, Activation
 from keras.models import Sequential

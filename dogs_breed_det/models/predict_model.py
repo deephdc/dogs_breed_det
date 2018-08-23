@@ -4,11 +4,11 @@
 import numpy as np
 import tempfile
 import os
-import dogs_breed.config as cfg
-import dogs_breed.dataset.data_utils as dutils
-import dogs_breed.models.model_utils as mutils
-import dogs_breed.features.build_features as bfeatures
-from dogs_breed.models.build_model import build_model
+import dogs_breed_det.config as cfg
+import dogs_breed_det.dataset.data_utils as dutils
+import dogs_breed_det.models.model_utils as mutils
+import dogs_breed_det.features.build_features as bfeatures
+from dogs_breed_det.models.build_model import build_model
 from keras.applications.resnet50 import preprocess_input, decode_predictions
 from keras.applications.resnet50 import ResNet50
 from keras import backend
