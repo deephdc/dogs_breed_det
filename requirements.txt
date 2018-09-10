@@ -1,3 +1,6 @@
+# internal requirement
+-e .
+
 # external requirements
 Sphinx
 coverage
