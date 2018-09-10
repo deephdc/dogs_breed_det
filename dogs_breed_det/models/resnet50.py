@@ -20,21 +20,22 @@ from keras import backend
 
 
 def get_metadata():
-#    d = {
-#        "id": "0",
-#        "name": self.name,
-#        "description": ("This is a short test for dogs_breed_det model "
-#                        "(loaded '%s')" % self.name),
-#        "author": 'Valentin Kozlov',
-#        "version": "0.3.0",
-#    }
+    name = "Dogs_breed"
     d = {
-        "author": None,
-        "description": None,
-        "url": None,
-        "license": None,
-        "version": None,
+        "id": "0",
+        "name": name,
+        "description": ("This is a model for dogs breed detection"
+                        "(loaded '%s')" % name),
+        "author": 'Valentin Kozlov',
+        "version": "0.3.0",
     }
+#    d = {
+#        "author": None,
+#        "description": None,
+#        "url": None,
+#        "license": None,
+#        "version": None,
+#    }
 
     return d
         
