@@ -12,7 +12,7 @@ from six.moves import urllib
 from keras.preprocessing import image                  
 from tqdm import tqdm
 
-def maybe_download_and_extract():
+def maybe_download_and_extract(dataset=cfg.dogDataDir, datasetUrl=cfg.dogDatasetUrl):
   """Download and extract the zip archive.
      Based on tensorflow tutorials."""
   data_dir = os.path.join(cfg.basedir,'data')
@@ -24,8 +24,8 @@ def maybe_download_and_extract():
       os.makedirs(rawdata_dir)
   
 
-  if not os.path.exists(os.path.join(data_dir, 'dogImages')):
-      filename = cfg.dogDatasetUrl.split('/')[-1]
+  if not os.path.exists(os.path.join(data_dir, dataset)):
+      filename = datasetUrl.split('/')[-1]
       filepath = os.path.join(rawdata_dir, filename)
       
       if not os.path.exists(filepath):
