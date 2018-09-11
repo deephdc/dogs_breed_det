@@ -1,13 +1,41 @@
 # -*- coding: utf-8 -*-
+import os
+import sys
+import zipfile
 import numpy as np
 import dogs_breed_det.config as cfg
 from sklearn.datasets import load_files       
 from keras.utils import np_utils
-from os import path
 from glob import glob
+from six.moves import urllib
 
 from keras.preprocessing import image                  
 from tqdm import tqdm
+
+def maybe_download_and_extract():
+  """Download and extract the zip archive.
+     Based on tensorflow tutorials."""
+  data_dir = os.path.join(cfg.basedir,'data')
+  if not os.path.exists(data_dir):
+      os.makedirs(data_dir)
+  filename = cfg.dogDatasetUrl.split('/')[-1]
+  filepath = os.path.join(data_dir, 'raw', filename)
+
+  if not os.path.exists(filepath):
+    def _progress(count, block_size, total_size):
+      sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
+          float(count * block_size) / float(total_size) * 100.0))
+      sys.stdout.flush()
+    filepath, _ = urllib.request.urlretrieve(cfg.dogDatasetUrl, filepath, _progress)
+    print()
+    statinfo = os.stat(filepath)
+    print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
+
+  dataset_zip = zipfile.ZipFile(filepath, 'r')
+  if not os.path.exists(os.path.join(data_dir, 'train')):
+      dataset_zip.extractall(data_dir)
+      dataset_zip.close()
+
 
 # define function to load train, test, and validation datasets
 def load_dataset(path):
@@ -27,8 +55,8 @@ def dog_names_create(dogNamesFile):
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
-    dataImagesTrain = path.join(cfg.basedir,'data','dogImages','train','*')
-    dogNames = [path.basename(path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
+    dataImagesTrain = os.path.join(cfg.basedir,'data','dogImages','train','*')
+    dogNames = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
 
     with open(dogNamesFile, 'w') as listfile:
         for item in dogNames:
@@ -42,7 +70,7 @@ def dog_names_read(dogNamesFile):
     :return:  list of string-valued dog breed names for translating labels
     """
     
-    if path.isfile(dogNamesFile):
+    if os.path.isfile(dogNamesFile):
         with open(dogNamesFile, 'r') as listfile:
             dogNames = [ line.rstrip('\n') for line in listfile ]
     else:
