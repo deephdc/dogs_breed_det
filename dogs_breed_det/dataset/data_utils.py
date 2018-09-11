@@ -18,21 +18,27 @@ def maybe_download_and_extract():
   data_dir = os.path.join(cfg.basedir,'data')
   if not os.path.exists(data_dir):
       os.makedirs(data_dir)
-  filename = cfg.dogDatasetUrl.split('/')[-1]
-  filepath = os.path.join(data_dir, 'raw', filename)
 
-  if not os.path.exists(filepath):
-    def _progress(count, block_size, total_size):
-      sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
-          float(count * block_size) / float(total_size) * 100.0))
-      sys.stdout.flush()
-    filepath, _ = urllib.request.urlretrieve(cfg.dogDatasetUrl, filepath, _progress)
-    print()
-    statinfo = os.stat(filepath)
-    print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
+  rawdata_dir = os.path.join(data_dir,'raw')
+  if not os.path.exists(rawdata_dir):
+      os.makedirs(rawdata_dir)
+  
 
-  dataset_zip = zipfile.ZipFile(filepath, 'r')
-  if not os.path.exists(os.path.join(data_dir, 'train')):
+  if not os.path.exists(os.path.join(data_dir, 'dogImages')):
+      filename = cfg.dogDatasetUrl.split('/')[-1]
+      filepath = os.path.join(rawdata_dir, filename)
+      
+      if not os.path.exists(filepath):
+          def _progress(count, block_size, total_size):
+              sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
+                  float(count * block_size) / float(total_size) * 100.0))
+              sys.stdout.flush()
+          filepath, _ = urllib.request.urlretrieve(cfg.dogDatasetUrl, filepath, _progress)
+          print()
+          statinfo = os.stat(filepath)
+          print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
+
+      dataset_zip = zipfile.ZipFile(filepath, 'r')    
       dataset_zip.extractall(data_dir)
       dataset_zip.close()
 

@@ -126,6 +126,10 @@ def train(nepochs=20, model='Resnet50'):
     """
     Train network (transfer learning)
     """
+    
+    # check if directories for train, tests, and valid exist:
+    dutils.maybe_download_and_extract()
+    
     dogImagesdir = os.path.join(cfg.basedir,'data','dogImages')
     _, train_targets = dutils.load_dataset(os.path.join(dogImagesdir,'train'))
     _, valid_targets = dutils.load_dataset(os.path.join(dogImagesdir,'valid'))
