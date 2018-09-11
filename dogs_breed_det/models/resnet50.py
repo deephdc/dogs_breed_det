@@ -140,6 +140,9 @@ def train(nepochs=20, model='Resnet50'):
     
     saved_weights_path = os.path.join(cfg.basedir,'models','weights.best.Resnet50.hdf5')
     checkpointer = ModelCheckpoint(filepath=saved_weights_path, verbose=1, save_best_only=True)
+
+    # clear possible pre-existing sessions. important!
+    backend.clear_session()
  
     net_model = build_model(model)
         
