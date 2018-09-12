@@ -46,7 +46,9 @@ setup(
 
     entry_points={
         'deepaas.model': [
-            'Dogs_breed=dogs_breed_det.models.resnet50',
+            'Dogs_Resnet50=dogs_breed_det.models.resnet50',
+            'Dogs_VGG16=dogs_breed_det.models.vgg16',
+            'Dogs_Xception=dogs_breed_det.models.xception',            
         ],
     },
     

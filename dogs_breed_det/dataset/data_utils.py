@@ -12,7 +12,7 @@ from six.moves import urllib
 from keras.preprocessing import image                  
 from tqdm import tqdm
 
-def maybe_download_and_extract(dataset=cfg.dogDataDir, datasetUrl=cfg.dogDatasetUrl):
+def maybe_download_and_extract(dataset=cfg.dogDataDir, dataStorage=cfg.dogStorage):
   """Download and extract the zip archive.
      Based on tensorflow tutorials."""
   data_dir = os.path.join(cfg.basedir,'data')
