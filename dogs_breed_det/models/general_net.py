@@ -94,7 +94,7 @@ def predict_file(img_path, network='Resnet50'):
     return mutils.format_prediction(dog_names_best, probs_best)
 
 
-def predict_data(img):
+def predict_data(img, network='Resnet50'):
     if not isinstance(img, list):
         img = [img]
     
@@ -110,7 +110,7 @@ def predict_data(img):
     prediction = []
     try:
         for imgfile in filenames:
-            prediction.append(predict_file(imgfile))
+            prediction.append(predict_file(imgfile, network))
     except Exception as e:
         raise e
     finally:

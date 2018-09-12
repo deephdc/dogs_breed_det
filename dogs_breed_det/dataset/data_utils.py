@@ -12,7 +12,7 @@ from six.moves import urllib
 from keras.preprocessing import image                  
 from tqdm import tqdm
 
-def maybe_download_and_extract(dataset=cfg.dogDataDir, dataStorage=cfg.dogStorage):
+def maybe_download_and_extract(dataset=cfg.dogDataDir, datasetUrl=cfg.dogDatasetUrl):
   """Download and extract the zip archive.
      Based on tensorflow tutorials."""
   data_dir = os.path.join(cfg.basedir,'data')
@@ -33,7 +33,7 @@ def maybe_download_and_extract(dataset=cfg.dogDataDir, dataStorage=cfg.dogStorag
               sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
                   float(count * block_size) / float(total_size) * 100.0))
               sys.stdout.flush()
-          filepath, _ = urllib.request.urlretrieve(cfg.dogDatasetUrl, filepath, _progress)
+          filepath, _ = urllib.request.urlretrieve(datasetUrl, filepath, _progress)
           print()
           statinfo = os.stat(filepath)
           print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
