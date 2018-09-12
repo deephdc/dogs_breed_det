@@ -26,12 +26,11 @@ def get_metadata():
 def build_model():
     """
     Simple call to Xception:
-    """
-   
+    """  
     return gennet.build_model('Xception', cfg.dogBreeds)
         
 
-def predict_file(img_path, network='Xception'):
+def predict_file(img_path):
     """
     Simple call to gennet.predict_file() using Xception
     :param img_path: image to classify, full path  
@@ -44,15 +43,13 @@ def predict_data(img):
     """
     Simple call to gennet.predict_data()
     """    
-
-    return gennet.predict_data(img)
+    return gennet.predict_data(img, 'Xception')
 
 
 def predict_url(*args):
     """
-    Simple call to gennet.predict_url()
+    Simple call to gennet.predict_url()  using Xception
     """    
-
     return gennet.predict_url(*args)
         
 
@@ -60,5 +57,4 @@ def train(nepochs=10):
     """
     Simple call to gennet.train() using Xception
     """ 
-
     return gennet.train(nepochs, 'Xception')

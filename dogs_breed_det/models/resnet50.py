@@ -26,12 +26,11 @@ def get_metadata():
 def build_model():
     """
     Simple call to Resnet50:
-    """
-   
+    """  
     return gennet.build_model('Resnet50', cfg.dogBreeds)
         
 
-def predict_file(img_path, network='Resnet50'):
+def predict_file(img_path):
     """
     Simple call to gennet.predict_file() using Resnet50
     :param img_path: image to classify, full path  
@@ -42,10 +41,9 @@ def predict_file(img_path, network='Resnet50'):
 
 def predict_data(img):
     """
-    Simple call to gennet.predict_data()
+    Simple call to gennet.predict_data() using Resnet50
     """    
-
-    return gennet.predict_data(img)
+    return gennet.predict_data(img, 'Resnet50')
 
 
 def predict_url(*args):

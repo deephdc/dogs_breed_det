@@ -30,7 +30,7 @@ def build_model():
     return gennet.build_model('VGG16', cfg.dogBreeds)
         
 
-def predict_file(img_path, network='VGG16'):
+def predict_file(img_path):
     """
     Simple call to gennet.predict_file() using VGG16
     :param img_path: image to classify, full path  
@@ -41,9 +41,9 @@ def predict_file(img_path, network='VGG16'):
 
 def predict_data(img):
     """
-    Simple call to gennet.predict_data()
+    Simple call to gennet.predict_data()  using VGG16
     """    
-    return gennet.predict_data(img)
+    return gennet.predict_data(img, 'VGG16')
 
 
 def predict_url(*args):
