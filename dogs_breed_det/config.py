@@ -6,3 +6,5 @@ basedir = path.dirname(path.normpath(path.dirname(__file__)))
 dogDatasetUrl = 'https://s3-us-west-1.amazonaws.com/udacity-aind/dog-project/dogImages.zip'
 dogDataDir = 'dogImages'
 dogNamesFile = path.join(basedir,'data','dog_names.txt')
+dogBreeds = 133
+

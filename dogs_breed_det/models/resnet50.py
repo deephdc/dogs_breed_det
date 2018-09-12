@@ -40,7 +40,7 @@ def get_metadata():
     return d
         
 
-def build_model(network='Resnet50'):
+def build_model(network='Resnet50', nclasses=cfg.dogBreeds):
     """
     Build network. Possible nets:
     Resnet50, Xception, InceptionV3, Resnet50, VGG19, VGG16
@@ -50,30 +50,42 @@ def build_model(network='Resnet50'):
 
     net_model = Sequential()
     net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
-    net_model.add(Dense(133, activation='softmax'))
-    
+    net_model.add(Dense(nclasses, activation='softmax'))
+
+    print("__"+network+"__: ")    
     net_model.summary()
-    net_model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+    net_model.compile(loss='categorical_crossentropy', 
+                      optimizer='rmsprop', 
+                      metrics=['accuracy'])
     
     return net_model
         
 
-def predict_file(img_path):
+def predict_file(img_path, network='Resnet50'):
     """
     Function to make prediction which breed is closest
     :param img_path: image to classify, full path
+    :param network: neural network to be used    
     :return: most probable dogs breed
     """
+
+    nets = {'VGG16': bfeatures.extract_VGG16,
+            'VGG19': bfeatures.extract_VGG19,
+            'Resnet50': bfeatures.extract_Resnet50,
+            'InceptionV3': bfeatures.extract_InceptionV3,
+            'Xception': bfeatures.extract_Xception,
+    }
 
     # clear possible pre-existing sessions. important!
     backend.clear_session()
     
-    net_model = build_model('Resnet50')
-    saved_weights_path = os.path.join(cfg.basedir,'models','weights.best.Resnet50.hdf5')
+    net_model = build_model(network)
+    saved_weights_path = os.path.join(cfg.basedir, 'models', 
+                                     'weights.best.' + network + '.hdf5')
     net_model.load_weights(saved_weights_path)
     
     # extract bottleneck features
-    bottleneck_feature = bfeatures.extract_Resnet50(dutils.path_to_tensor(img_path))
+    bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
     # obtain predicted vector
     predicted_vector = net_model.predict(bottleneck_feature)
     print("Sum:", np.sum(predicted_vector))
@@ -122,7 +134,7 @@ def predict_url(*args):
     return message
         
 
-def train(nepochs=10, model='Resnet50'):
+def train(nepochs=10, network='Resnet50'):
     """
     Train network (transfer learning)
     """
@@ -130,25 +142,26 @@ def train(nepochs=10, model='Resnet50'):
     # check if directories for train, tests, and valid exist:
     dutils.maybe_download_and_extract()
     
-    dogImagesdir = os.path.join(cfg.basedir,'data', cfg.dogDataDir)
-    _, train_targets = dutils.load_dataset(os.path.join(dogImagesdir,'train'))
-    _, valid_targets = dutils.load_dataset(os.path.join(dogImagesdir,'valid'))
-    _, test_targets = dutils.load_dataset(os.path.join(dogImagesdir,'test'))
+    dogImagesDir = os.path.join(cfg.basedir,'data', cfg.dogDataDir)
+    _, train_targets = dutils.load_dataset(os.path.join(dogImagesDir,'train'))
+    _, valid_targets = dutils.load_dataset(os.path.join(dogImagesDir,'valid'))
+    _, test_targets = dutils.load_dataset(os.path.join(dogImagesDir,'test'))
 
-    train_net, valid_net, test_net = bfeatures.build_features(model)
+    train_net, valid_net, test_net = bfeatures.build_features(network)
     data_size = {
         'train': len(train_targets),
         'valid': len(valid_targets),
         'test': len(test_targets)
         }
     
-    saved_weights_path = os.path.join(cfg.basedir,'models','weights.best.Resnet50.hdf5')
+    saved_weights_path = os.path.join(cfg.basedir, 'models', 
+                                     'weights.best.' + network + '.hdf5')
     checkpointer = ModelCheckpoint(filepath=saved_weights_path, verbose=1, save_best_only=True)
 
     # clear possible pre-existing sessions. important!
     backend.clear_session()
  
-    net_model = build_model(model)
+    net_model = build_model(network)
         
     net_model.fit(train_net, train_targets, 
                   validation_data=(valid_net, valid_targets),

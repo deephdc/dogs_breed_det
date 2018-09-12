@@ -61,7 +61,7 @@ def dog_names_create(dogNamesFile):
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
-    dataImagesTrain = os.path.join(cfg.basedir,'data','dogImages','train','*')
+    dataImagesTrain = os.path.join(cfg.basedir,'data', cfg.dogDataDir, 'train','*')
     dogNames = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
 
     with open(dogNamesFile, 'w') as listfile:
