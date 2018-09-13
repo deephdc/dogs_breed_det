@@ -1,3 +1,9 @@
+#####
+# Run from ~/your_project as
+# $> docker build -t dockerimage -f docker/Dockerfile.dev .
+# Then use as
+# $> docker run -ti -v ~/your_project:/home dockerimage /bin/bash
+#####
 # Base image, e.g. tensorflow/tensorflow:1.7.0
 FROM tensorflow/tensorflow:1.8.0
 
@@ -20,12 +26,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Set the working directory
 WORKDIR /home
 
-# Copy the current directory contents into the container at /home
-#ADD . /home
-
 # Install python packages listed in requirements.txt
 COPY requirements.txt /home/
-RUN python -m pip --no-cache-dir install -r /home/requirements.txt \
+RUN pip --no-cache-dir install -r /home/requirements.txt \
 ### (OPTIONAL!) If you want to use Jupyter, uncomment:
 #        jupyter \
 #        jupyterlab && \
