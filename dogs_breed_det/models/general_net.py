@@ -21,15 +21,10 @@ from keras import backend
 
 
 def get_metadata():
-    #d = {
-    #    "author": None,
-    #    "description": None,
-    #    "url": None,
-    #    "license": None,
-    #    "version": None,
-    #}
     
-    pkg = pkg_resources.get_distribution("dogs_breed_det")
+    module = __name__.split('.', 1)    
+    
+    pkg = pkg_resources.get_distribution(module[0])
     meta = {
         'Name': None,
         'Version': None,
