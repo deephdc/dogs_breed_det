@@ -1,6 +1,6 @@
 node {
   def dockerhubuser = 'vykozlov'
-  def dockerhubcredentials = _(CHANGE!)_ # dockerhub credentials as stored in Jenkins
+  def dockerhubcredentials = dockerhub-vykozlov-credentials # dockerhub credentials as stored in Jenkins
   def appName = 'dogs_breed_det'
   def mainVer = '0.3.0'
   def imageTagBase = "${appName}:${env.BRANCH_NAME}-${mainVer}.${env.BUILD_NUMBER}"
