@@ -14,9 +14,10 @@ RUN apt-get update && \
 WORKDIR /home
 
 # Copy the current directory contents into the container at /home
-ADD . /home
+#ADD . /home
 
 # Install python packages listed in requirements.txt
+COPY requirements.txt /home/
 RUN python -m pip --no-cache-dir install -r /home/requirements.txt \
 ### (OPTIONAL!) If you want to use Jupyter, uncomment:
 #        jupyter \

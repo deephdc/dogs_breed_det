@@ -10,17 +10,11 @@ import dogs_breed_det.models.general_net as gennet
 
 
 def get_metadata():
-    name = "Dogs_breed_Resnet50"
-    d = {
-        "id": "0",
-        "name": name,
-        "description": ("This is a model for dogs breed detection"
-                        "(loaded '%s')" % name),
-        "author": 'Valentin Kozlov',
-        "version": "0.3.0",
-    }
 
-    return d
+    meta = gennet.get_metadata()
+    meta['Name'] = "Dogs_breed_Resnet50"
+
+    return meta
         
 
 def build_model():

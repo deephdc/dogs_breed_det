@@ -8,6 +8,7 @@ Created on Mon Sep  3 21:29:57 2018
 import os
 import tempfile
 import numpy as np
+import pkg_resources
 import werkzeug.exceptions as exceptions
 import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
@@ -20,15 +21,31 @@ from keras import backend
 
 
 def get_metadata():
-    d = {
-        "author": None,
-        "description": None,
-        "url": None,
-        "license": None,
-        "version": None,
+    #d = {
+    #    "author": None,
+    #    "description": None,
+    #    "url": None,
+    #    "license": None,
+    #    "version": None,
+    #}
+    
+    pkg = pkg_resources.get_distribution("dogs_breed_det")
+    meta = {
+        'Name': None,
+        'Version': None,
+        'Summary': None,
+        'Home-page': None,
+        'Author': None,
+        'Author-email': None,
+        'License': None,
     }
 
-    return d
+    for l in pkg.get_metadata_lines("PKG-INFO"):
+        k, v = l.split(":", 1)
+        if k in meta:
+            meta[k] = v
+
+    return meta
         
 
 def build_model(network='Resnet50', nclasses=cfg.dogBreeds):
