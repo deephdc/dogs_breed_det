@@ -41,10 +41,11 @@ def get_metadata():
     }
 
     for l in pkg.get_metadata_lines("PKG-INFO"):
-        k, v = l.split(":", 1)
-        if k in meta:
-            meta[k] = v
-
+        for par in meta:
+            if l.startswith(par):
+                k, v = l.split(": ", 1)
+                meta[par] = v
+                
     return meta
         
 

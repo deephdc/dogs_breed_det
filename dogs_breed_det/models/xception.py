@@ -10,17 +10,13 @@ import dogs_breed_det.models.general_net as gennet
 
 
 def get_metadata():
-    name = "Dogs_breed_Xception"
-    d = {
-        "id": "0",
-        "name": name,
-        "description": ("This is a model for dogs breed detection"
-                        "(loaded '%s')" % name),
-        "author": 'Valentin Kozlov',
-        "version": "0.3.0",
-    }
+    """
+    Simple call to get_metadata and set name to _Xception:
+    """ 
+    meta = gennet.get_metadata()
+    meta['Name'] = "Dogs_Xception"
 
-    return d
+    return meta
         
 
 def build_model():
