@@ -12,9 +12,14 @@ def maybe_download_bottleneck(bottleneck_storage = cfg.dogStorage, bottleneck_fi
     :param bottleneck_file: name of the file to download
     """
 
-    bottleneck_path = os.path.join(cfg.basedir,'models','bottleneck_features', bottleneck_file)
+    bottleneck_maindir = os.path.join(cfg.basedir,'models','bottleneck_features')
+    if not os.path.exists(bottleneck_maindir):
+        os.makedirs(bottleneck_maindir)
+
+    bottleneck_path = os.path.join(bottleneck_maindir, bottleneck_file)
     bottleneck_url = bottleneck_storage.rstrip('/') + '/' + bottleneck_file
 
+    # if bottleneck_features file does not exist, download it
     if not os.path.exists(bottleneck_path):
         def _progress(count, block_size, total_size):
             sys.stdout.write('\r>> Downloading %s %.1f%%' % (bottleneck_file,
