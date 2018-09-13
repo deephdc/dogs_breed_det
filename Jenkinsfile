@@ -14,7 +14,7 @@ node {
 
       stage('Build test image and run tests') {
           def imageTagTest = "${imageTagBase}-tests"
-          sh("nvidia-docker build -t ${imageTag} -f docker/Dockerfile.tests .")
+          sh("nvidia-docker build -t ${imageTagTest} -f docker/Dockerfile.tests .")
           sh("docker run ${imageTagTest} ./run_pylint.sh >pylint.log || exit 0")        
           warnings canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PyLint', pattern: '**/pylint.log']], unHealthy: ''
 
