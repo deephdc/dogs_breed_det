@@ -4,57 +4,59 @@ node {
   def dockerhubcredentials = 'dockerhub-vykozlov-credentials' // dockerhub credentials as stored in Jenkins
   def appName = 'dogs_breed_det'
   def mainVer = '0.3.0'
-  def imageTagBase = '${appName}:${env.BRANCH_NAME}-${mainVer}.${env.BUILD_NUMBER}'
+  def imageTagBase = "${appName}:${env.BRANCH_NAME}-${mainVer}.${env.BUILD_NUMBER}"
   def imageTagExtension = ''    // e.g. '-gpu'
-  def imageTag = '${dockerhubuser}/${imageTagBase}${imageTagExtension}'
+  def imageTag = "${dockerhubuser}/${imageTagBase}${imageTagExtension}"
   
   try {
-      dir('dogs_breed_det') {
-          stage ('Clone repository') {
+      stage ('Clone repositories') {
+          dir('dogs_breed_det') {
               checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-                  credentialsId: githubcredentials,
+                  credentialsId: "${githubcredentials}",
                   userRemoteConfigs: [[url: 'http://github.com/vykozlov/dogs_breed_det.git']]])
           }
 
-          stage('Build test image and run tests') {
-              dir('dogs_breed_det') {
-                  def imageTagTest = "${imageTagBase}-tests"
-                  sh("nvidia-docker build -t ${imageTagTest} -f docker/Dockerfile.tests .")
-                  sh("docker run ${imageTagTest} ./run_pylint.sh >pylint.log || exit 0")        
-                  warnings canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PyLint', pattern: '**/pylint.log']], unHealthy: ''
+          dir('DEEP-OC-dogs_breed_det') {
+              checkout([$class: 'GitSCM', branches: [[name: '*/master']],
+                  credentialsId: "${githubcredentials}",
+                  userRemoteConfigs: [[url: 'http://github.com/vykozlov/DEEP-OC-dogs_breed_det.git']]])
+          }
+      }
 
-                  echo "Here should be more tests for ${imageTagTest}"
-              }
+      stage ('Build test image and run tests') {
+          dir('dogs_breed_det') {
+              def imageTagTest = "${imageTagBase}-tests"
+              sh("nvidia-docker build -t ${imageTagTest} -f docker/Dockerfile.tests .")
+              sh("docker run ${imageTagTest} ./run_pylint.sh >pylint.log || exit 0")        
+              warnings canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PyLint', pattern: '**/pylint.log']], unHealthy: ''
+
+              echo "Here should be more tests for ${imageTagTest}"
               // delete test docker image from Jenkins site
               sh("docker rmi --force ${imageTagTest}")
           }
       }
 
-      dir('DEEP-OC-dogs_breed_det') {
-          stage ('Clone repository') {
-              checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-                  credentialsId: githubcredentials,
-                  userRemoteConfigs: [[url: 'http://github.com/vykozlov/DEEP-OC-dogs_breed_det.git']]])
-          }
 
-          stage('Build and Push docker image to registry') {
+      stage ('Build and Push docker image to registry') {
+          dir('DEEP-OC-dogs_breed_det') {
               echo "${imageTag}"
-              sh("nvidia-docker build -t ${imageTag} -f docker/Dockerfile .")
-              withCredentials([usernamePassword(credentialsId: ${dockerhubcredentials}, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+              sh("nvidia-docker build -t ${imageTag} .")
+              withCredentials([usernamePassword(credentialsId: "${dockerhubcredentials}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                   sh '''
-                     docker login -u ${USERNAME} -p ${PASSWORD}
+                     docker login -u "$USERNAME" -p "$PASSWORD"
                      '''
               }
-          }
-          sh("docker push ${imageTag}")     
+              sh("docker push ${imageTag}") 
+          }    
+      }
 
-          stage('Deploy Application') {
-          }
+      stage('Deploy Application') {
+      }
 
-          stage('Post Deployment') {
-              // delete docker image from Jenkins site
-              sh("docker rmi ${imageTag}")
-          }
+
+      stage ('Post Deployment') {
+          // delete docker image from Jenkins site
+          sh("docker rmi ${imageTag}")
       }
 
   } catch (e) {
