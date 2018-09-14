@@ -84,8 +84,8 @@ def predict_file(img_path, network='Resnet50'):
     backend.clear_session()
     
     net_model = build_model(network)
-    saved_weights_path = os.path.join(cfg.basedir, 'models', 
-                                     'weights.best.' + network + '.hdf5')
+    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
+                                      'weights.best.' + network + '.hdf5')
     net_model.load_weights(saved_weights_path)
     
     # extract bottleneck features
