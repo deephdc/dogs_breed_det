@@ -6,7 +6,6 @@ node {
   def mainVer = '0.3.0'
   def imageTagBase = "${appName}:${env.BRANCH_NAME}-${mainVer}.${env.BUILD_NUMBER}"
   def imageTagExtension = ''    // e.g. '-gpu'
-  def imageTag = "${dockerhubuser}/${imageTagBase}${imageTagExtension}"
   
   try {
       stage ('Clone repositories') {
@@ -39,14 +38,18 @@ node {
 
       stage ('Build and Push docker image to registry') {
           dir("DEEP-OC-${appName}") {
+              def imageTag = "${dockerhubuser}/deep-oc-${imageTagBase}${imageTagExtension}"
+              def imageTagLatest = "${dockerhubuser}/deep-oc-${appName}"
               echo "${imageTag}"
-              sh("nvidia-docker build -t ${imageTag} .")
+              echo "${imageTagLatest}"  
+              sh("nvidia-docker build -t ${imageTag} -t ${imageTagLatest} .")
               withCredentials([usernamePassword(credentialsId: "${dockerhubcredentials}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                   sh '''
                      docker login -u "$USERNAME" -p "$PASSWORD"
                      '''
               }
-              sh("docker push ${imageTag}") 
+              sh("docker push ${imageTag}")
+              sh("docker push ${imageTagLatest}") 
           }    
       }
 
