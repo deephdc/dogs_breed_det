@@ -6,6 +6,8 @@ node {
   def mainVer = '0.3.0'
   def imageTagBase = "${appName}:${env.BRANCH_NAME}-${mainVer}.${env.BUILD_NUMBER}"
   def imageTagExtension = ''    // e.g. '-gpu'
+  def imageTag = "${dockerhubuser}/deep-oc-${imageTagBase}${imageTagExtension}"
+  def imageTagLatest = "${dockerhubuser}/deep-oc-${appName}"
   
   try {
       stage ('Clone repositories') {
@@ -37,11 +39,7 @@ node {
 
 
       stage ('Build and Push docker image to registry') {
-          dir("DEEP-OC-${appName}") {
-              def imageTag = "${dockerhubuser}/deep-oc-${imageTagBase}${imageTagExtension}"
-              def imageTagLatest = "${dockerhubuser}/deep-oc-${appName}"
-              echo "${imageTag}"
-              echo "${imageTagLatest}"  
+          dir("DEEP-OC-${appName}") { 
               sh("nvidia-docker build -t ${imageTag} -t ${imageTagLatest} .")
               withCredentials([usernamePassword(credentialsId: "${dockerhubcredentials}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                   sh '''
@@ -60,6 +58,7 @@ node {
       stage ('Post Deployment') {
           // delete docker image from Jenkins site
           sh("docker rmi ${imageTag}")
+          sh("docker rmi ${imageTagLatest}")
       }
 
   } catch (e) {
