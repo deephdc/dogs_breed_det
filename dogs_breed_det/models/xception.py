@@ -23,7 +23,7 @@ def build_model():
     """
     Simple call to Xception:
     """  
-    return gennet.build_model('Xception', cfg.dogBreeds)
+    return gennet.build_model('Xception', cfg.Dog_LabelsNum)
         
 
 def predict_file(img_path):

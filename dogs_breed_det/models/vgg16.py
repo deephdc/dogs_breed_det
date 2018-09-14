@@ -22,7 +22,7 @@ def build_model():
     """
     Simple call to VGG16:
     """  
-    return gennet.build_model('VGG16', cfg.dogBreeds)
+    return gennet.build_model('VGG16', cfg.Dog_LabelsNum)
         
 
 def predict_file(img_path):

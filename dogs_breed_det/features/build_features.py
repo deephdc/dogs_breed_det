@@ -6,13 +6,13 @@ import dogs_breed_det.config as cfg
 from six.moves import urllib
 
 
-def maybe_download_bottleneck(bottleneck_storage = cfg.dogStorage, bottleneck_file = 'DogResnet50Data.npz'):
+def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_file = 'DogResnet50Data.npz'):
     """
     Download bottleneck features if they do not exist locally.
     :param bottleneck_file: name of the file to download
     """
 
-    bottleneck_maindir = os.path.join(cfg.basedir,'models','bottleneck_features')
+    bottleneck_maindir = os.path.join(cfg.BASE_DIR,'models','bottleneck_features')
     if not os.path.exists(bottleneck_maindir):
         os.makedirs(bottleneck_maindir)
 
@@ -35,9 +35,9 @@ def build_features(network = 'Resnet50'):
     """Load features from the file"""
 
     bottleneck_file = 'Dog' + network + 'Data.npz'
-    maybe_download_bottleneck(cfg.dogStorage, bottleneck_file)
+    maybe_download_bottleneck(cfg.Dog_Storage, bottleneck_file)
     
-    bottleneck_path = os.path.join(cfg.basedir,'models','bottleneck_features', bottleneck_file)
+    bottleneck_path = os.path.join(cfg.BASE_DIR,'models','bottleneck_features', bottleneck_file)
     bottleneck_features = np.load(bottleneck_path)
     train_net = bottleneck_features['train']
     valid_net = bottleneck_features['valid']

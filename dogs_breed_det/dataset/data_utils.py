@@ -12,10 +12,10 @@ from six.moves import urllib
 from keras.preprocessing import image                  
 from tqdm import tqdm
 
-def maybe_download_and_extract(dataset=cfg.dogDataDir, datasetUrl=cfg.dogDatasetUrl):
+def maybe_download_and_extract(dataset=cfg.Dog_DataDir, datasetURL=cfg.Dog_DatasetURL):
   """Download and extract the zip archive.
      Based on tensorflow tutorials."""
-  data_dir = os.path.join(cfg.basedir,'data')
+  data_dir = os.path.join(cfg.BASE_DIR,'data')
   if not os.path.exists(data_dir):
       os.makedirs(data_dir)
 
@@ -25,7 +25,7 @@ def maybe_download_and_extract(dataset=cfg.dogDataDir, datasetUrl=cfg.dogDataset
   
 
   if not os.path.exists(os.path.join(data_dir, dataset)):
-      filename = datasetUrl.split('/')[-1]
+      filename = datasetURL.split('/')[-1]
       filepath = os.path.join(rawdata_dir, filename)
       
       if not os.path.exists(filepath):
@@ -33,7 +33,7 @@ def maybe_download_and_extract(dataset=cfg.dogDataDir, datasetUrl=cfg.dogDataset
               sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
                   float(count * block_size) / float(total_size) * 100.0))
               sys.stdout.flush()
-          filepath, _ = urllib.request.urlretrieve(datasetUrl, filepath, _progress)
+          filepath, _ = urllib.request.urlretrieve(datasetURL, filepath, _progress)
           print()
           statinfo = os.stat(filepath)
           print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
@@ -61,7 +61,7 @@ def dog_names_create(dogNamesFile):
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
-    dataImagesTrain = os.path.join(cfg.basedir,'data', cfg.dogDataDir, 'train','*')
+    dataImagesTrain = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, 'train','*')
     dogNames = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
 
     with open(dogNamesFile, 'w') as listfile:

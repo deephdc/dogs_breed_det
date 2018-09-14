@@ -22,7 +22,7 @@ def build_model():
     """
     Simple call to InceptionV3:
     """  
-    return gennet.build_model('InceptionV3', cfg.dogBreeds)
+    return gennet.build_model('InceptionV3', cfg.Dog_LabelsNum)
         
 
 def predict_file(img_path):

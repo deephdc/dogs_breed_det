@@ -44,7 +44,7 @@ def get_metadata():
     return meta
         
 
-def build_model(network='Resnet50', nclasses=cfg.dogBreeds):
+def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     """
     Build network. Possible nets:
     Resnet50, VGG19, VGG16, InceptionV3, Xception
@@ -95,7 +95,7 @@ def predict_file(img_path, network='Resnet50'):
     print("Sum:", np.sum(predicted_vector))
     # return dog breed that is predicted by the model
     idxs = np.argsort(predicted_vector[0])[::-1][:5] 
-    dog_names  = dutils.dog_names_read(cfg.dogNamesFile)
+    dog_names  = dutils.dog_names_read(cfg.Dog_LabelsFile)
     #dog_names_best = [ dog_names[i] for i in idxs ]
     dog_names_best = []
     probs_best = []
@@ -146,10 +146,10 @@ def train(nepochs=10, network='Resnet50'):
     # check if directories for train, tests, and valid exist:
     dutils.maybe_download_and_extract()
     
-    dogImagesDir = os.path.join(cfg.basedir,'data', cfg.dogDataDir)
-    _, train_targets = dutils.load_dataset(os.path.join(dogImagesDir,'train'))
-    _, valid_targets = dutils.load_dataset(os.path.join(dogImagesDir,'valid'))
-    _, test_targets = dutils.load_dataset(os.path.join(dogImagesDir,'test'))
+    Dog_ImagesDir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir)
+    _, train_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'train'))
+    _, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
+    _, test_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'test'))
 
     train_net, valid_net, test_net = bfeatures.build_features(network)
     data_size = {
@@ -158,7 +158,7 @@ def train(nepochs=10, network='Resnet50'):
         'test': len(test_targets)
         }
     
-    saved_weights_path = os.path.join(cfg.basedir, 'models', 
+    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
                                      'weights.best.' + network + '.hdf5')
     checkpointer = ModelCheckpoint(filepath=saved_weights_path, verbose=1, save_best_only=True)
 
