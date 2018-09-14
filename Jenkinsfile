@@ -10,21 +10,21 @@ node {
   
   try {
       stage ('Clone repositories') {
-          dir('dogs_breed_det') {
+          dir("${appName}") {
               checkout([$class: 'GitSCM', branches: [[name: '*/master']],
                   credentialsId: "${githubcredentials}",
-                  userRemoteConfigs: [[url: 'http://github.com/vykozlov/dogs_breed_det.git']]])
+                  userRemoteConfigs: [[url: "http://github.com/vykozlov/${appName}.git"]]])
           }
 
-          dir('DEEP-OC-dogs_breed_det') {
+          dir("DEEP-OC-${appName}") {
               checkout([$class: 'GitSCM', branches: [[name: '*/master']],
                   credentialsId: "${githubcredentials}",
-                  userRemoteConfigs: [[url: 'http://github.com/vykozlov/DEEP-OC-dogs_breed_det.git']]])
+                  userRemoteConfigs: [[url: "http://github.com/vykozlov/DEEP-OC-${appName}.git"]]])
           }
       }
 
       stage ('Build test image and run tests') {
-          dir('dogs_breed_det') {
+          dir("${appName}") {
               def imageTagTest = "${imageTagBase}-tests"
               sh("nvidia-docker build -t ${imageTagTest} -f docker/Dockerfile.tests .")
               sh("docker run ${imageTagTest} ./run_pylint.sh >pylint.log || exit 0")        
@@ -38,7 +38,7 @@ node {
 
 
       stage ('Build and Push docker image to registry') {
-          dir('DEEP-OC-dogs_breed_det') {
+          dir("DEEP-OC-${appName}") {
               echo "${imageTag}"
               sh("nvidia-docker build -t ${imageTag} .")
               withCredentials([usernamePassword(credentialsId: "${dockerhubcredentials}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
