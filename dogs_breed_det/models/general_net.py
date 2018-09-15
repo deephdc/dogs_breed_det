@@ -50,13 +50,21 @@ def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
     
-    train_net, _, _ = bfeatures.build_features(network)
+    #train_net, _, _ = bfeatures.load_features(network)
+    # introduce bottleneck_features shapes manually 
+    features_shape = {'VGG16': [7, 7, 512],
+                      'VGG19': [7, 7, 512],
+                      'Resnet50': [1, 1, 2048],
+                      'InceptionV3': [5, 5, 2048],
+                      'Xception': [7, 7, 2048],
+    }
 
     net_model = Sequential()
-    net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
+    #net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
+    net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
     net_model.add(Dense(nclasses, activation='softmax'))
 
-    print("__"+network+"__: ")    
+    print("__"+network+"__: ")
     net_model.summary()
     net_model.compile(loss='categorical_crossentropy', 
                       optimizer='rmsprop', 
@@ -134,7 +142,7 @@ def predict_data(img, network='Resnet50'):
 
 
 def predict_url(*args):
-    message = 'Not (yet) implemented in the model)'
+    message = 'Not (yet) implemented in the model (predict_url())'
     return message
         
 
@@ -147,11 +155,14 @@ def train(nepochs=10, network='Resnet50'):
     dutils.maybe_download_and_extract()
     
     Dog_ImagesDir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir)
-    _, train_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'train'))
-    _, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
-    _, test_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'test'))
+    train_files, train_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'train'))
+    valid_files, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
+    test_files, test_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'test'))
 
-    train_net, valid_net, test_net = bfeatures.build_features(network)
+    valid_net = bfeatures.build_features(valid_files, network)
+    train_net, _, test_net = bfeatures.load_features(network)
+    print("Sizes of bottleneck_features (train, valid, test):")
+    print(train_net.shape, valid_net.shape, test_net.shape)
     data_size = {
         'train': len(train_targets),
         'valid': len(valid_targets),

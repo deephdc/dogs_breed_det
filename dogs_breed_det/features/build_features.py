@@ -3,8 +3,9 @@ import os
 import sys
 import numpy as np
 import dogs_breed_det.config as cfg
+import dogs_breed_det.dataset.data_utils as dutils
 from six.moves import urllib
-
+from tqdm import tqdm
 
 def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_file = 'DogResnet50Data.npz'):
     """
@@ -30,8 +31,20 @@ def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_f
         statinfo = os.stat(bottleneck_path)
         print('Successfully downloaded', bottleneck_file, statinfo.st_size, 'bytes.')
         
+def build_features(img_files, network = 'Resnet50'):
+    """Build bottleneck_features for set of files"""
 
-def build_features(network = 'Resnet50'):
+    nets = {'VGG16': extract_VGG16,
+            'VGG19': extract_VGG19,
+            'Resnet50': extract_Resnet50,
+            'InceptionV3': extract_InceptionV3,
+            'Xception': extract_Xception,
+    }
+    
+    bottleneck_features = [nets[network](dutils.path_to_tensor(img)) for img in tqdm(img_files)]
+    return np.vstack(bottleneck_features)
+
+def load_features(network = 'Resnet50'):
     """Load features from the file"""
 
     bottleneck_file = 'Dog' + network + 'Data.npz'
