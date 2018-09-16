@@ -159,8 +159,7 @@ def train(nepochs=10, network='Resnet50'):
     valid_files, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
     test_files, test_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'test'))
 
-    valid_net = bfeatures.build_features(valid_files, network)
-    train_net, _, test_net = bfeatures.load_features(network)
+    train_net, valid_net, test_net = bfeatures.load_features(network)
     print("Sizes of bottleneck_features (train, valid, test):")
     print(train_net.shape, valid_net.shape, test_net.shape)
     data_size = {
