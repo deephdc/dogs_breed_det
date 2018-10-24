@@ -1,14 +1,14 @@
-#####
-# Run from ~/your_project as
+##################
+# Run from ~/dogs_breed_det as
 # $> docker build -t dockerimage -f docker/Dockerfile.dev .
 # Then use as
-# $> docker run -ti -v ~/your_project:/home dockerimage /bin/bash
-#####
+# $> docker run -ti -v ~/dogs_breed_det:/app dockerimage /bin/bash
+##################
 # Base image, e.g. tensorflow/tensorflow:1.7.0
 FROM tensorflow/tensorflow:1.8.0
 
-LABEL maintainer='Valentin Kozlov'
-# Dogs breed detector
+LABEL maintainer='V.Kozlov (KIT)'
+# Dogs breed detector as example for DEEPaaS API
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -23,12 +23,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     rm -rf /root/.cache/pip/* && \
     rm -rf /tmp/*
 
+# Set LANG environment
+ENV LANG C.UTF-8
+
 # Set the working directory
-WORKDIR /home
+WORKDIR /app
 
 # Install python packages listed in requirements.txt
-COPY requirements.txt /home/
-RUN pip --no-cache-dir install -r /home/requirements.txt \
+COPY requirements-dev.txt /root
+RUN pip --no-cache-dir install -r /root/requirements-dev.txt \
 ### (OPTIONAL!) If you want to use Jupyter, uncomment:
 #        jupyter \
 #        jupyterlab && \

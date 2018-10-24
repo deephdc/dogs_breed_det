@@ -31,7 +31,7 @@ def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_f
         statinfo = os.stat(bottleneck_path)
         print('Successfully downloaded', bottleneck_file, statinfo.st_size, 'bytes.')
         
-def build_features(img_files, network = 'Resnet50'):
+def build_features(img_files, set_type, network = 'Resnet50'):
     """Build bottleneck_features for set of files"""
 
     nets = {'VGG16': extract_VGG16,
@@ -41,8 +41,13 @@ def build_features(img_files, network = 'Resnet50'):
             'Xception': extract_Xception,
     }
     
-    bottleneck_features = [nets[network](dutils.path_to_tensor(img)) for img in tqdm(img_files)]
-    return np.vstack(bottleneck_features)
+    bottleneck_features = nets[network](dutils.paths_to_tensor(img_files))
+    np.savez(os.path.join(cfg.BASE_DIR, 'models', 'bottleneck_features', 
+             network + 'features_' + set_type), set_type=bottleneck_features)  
+    
+    print("Bottleneck features size (build_features):", bottleneck_features.shape)    
+    
+    return bottleneck_features
 
 def load_features(network = 'Resnet50'):
     """Load features from the file"""

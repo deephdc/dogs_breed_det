@@ -21,9 +21,12 @@ from keras import backend
 
 
 def get_metadata():
-    
-    module = __name__.split('.', 1)    
-    
+    """
+    Function to read metadata
+    """
+
+    module = __name__.split('.', 1)
+
     pkg = pkg_resources.get_distribution(module[0])
     meta = {
         'Name': None,
@@ -35,12 +38,12 @@ def get_metadata():
         'License': None,
     }
 
-    for l in pkg.get_metadata_lines("PKG-INFO"):
+    for line in pkg.get_metadata_lines("PKG-INFO"):
         for par in meta:
-            if l.startswith(par):
-                k, v = l.split(": ", 1)
-                meta[par] = v
-                
+            if line.startswith(par):
+                _, value = line.split(": ", 1)
+                meta[par] = value
+
     return meta
         
 
@@ -50,7 +53,7 @@ def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
     
-    #train_net, _, _ = bfeatures.load_features(network)
+    train_net, _, _ = bfeatures.load_features(network)
     # introduce bottleneck_features shapes manually 
     features_shape = {'VGG16': [7, 7, 512],
                       'VGG19': [7, 7, 512],
@@ -60,8 +63,8 @@ def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     }
 
     net_model = Sequential()
-    #net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
-    net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
+    net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
+    #net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
     net_model.add(Dense(nclasses, activation='softmax'))
 
     print("__"+network+"__: ")
@@ -98,6 +101,7 @@ def predict_file(img_path, network='Resnet50'):
     
     # extract bottleneck features
     bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
+    print("Bottleneck feature size:", bottleneck_feature.shape)
     # obtain predicted vector
     predicted_vector = net_model.predict(bottleneck_feature)
     print("Sum:", np.sum(predicted_vector))
@@ -158,6 +162,10 @@ def train(nepochs=10, network='Resnet50'):
     train_files, train_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'train'))
     valid_files, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
     test_files, test_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'test'))
+    
+    #train_net = bfeatures.build_features(train_files, 'train', network)
+    #valid_net = bfeatures.build_features(valid_files, 'valid', network)
+    #test_net = bfeatures.build_features(test_files, 'test', network)
 
     train_net, valid_net, test_net = bfeatures.load_features(network)
     print("Sizes of bottleneck_features (train, valid, test):")

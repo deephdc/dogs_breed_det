@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+   Module to prepare the dataset
+"""
 import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
+import dogs_breed_det.config as cfg
 
 
 def main(input_filepath, output_filepath):
     """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
+        cleaned data ready to be analyzed.
     """
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')

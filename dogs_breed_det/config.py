@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+""" 
+   Module to define CONSTANTS used across the project
+"""
+
 from os import path
 
 # identify basedir for the package

@@ -1,98 +1,78 @@
-node {
-  def githubcredentials = 'github-vykozlov-credentials'
-  def dockerhubuser = 'vykozlov'
-  def dockerhubcredentials = 'dockerhub-vykozlov-credentials' // dockerhub credentials as stored in Jenkins
-  def appName = 'dogs_breed_det'
-  def mainVer = '0.3.0'
-  def imageTagBase = "${appName}:${env.BRANCH_NAME}-${mainVer}.${env.BUILD_NUMBER}"
-  def imageTagExtension = ''    // e.g. '-gpu'
-  def imageTag = "${dockerhubuser}/deep-oc-${imageTagBase}${imageTagExtension}"
-  def imageTagLatest = "${dockerhubuser}/deep-oc-${appName}"
-  
-  try {
-      stage ('Clone repositories') {
-          dir("${appName}") {
-              checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-                  credentialsId: "${githubcredentials}",
-                  userRemoteConfigs: [[url: "http://github.com/vykozlov/${appName}.git"]]])
-          }
+#!/usr/bin/groovy
 
-          dir("DEEP-OC-${appName}") {
-              checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-                  credentialsId: "${githubcredentials}",
-                  userRemoteConfigs: [[url: "http://github.com/vykozlov/DEEP-OC-${appName}.git"]]])
-          }
-      }
+@Library(['github.com/indigo-dc/jenkins-pipeline-library']) _
 
-      stage ('Build test image and run tests') {
-          dir("${appName}") {
-              def imageTagTest = "${imageTagBase}-tests"
-              sh("nvidia-docker build -t ${imageTagTest} -f docker/Dockerfile.tests .")
-              sh("docker run ${imageTagTest} ./run_pylint.sh >pylint.log || exit 0")        
-              warnings canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PyLint', pattern: '**/pylint.log']], unHealthy: ''
+pipeline {
+    agent {
+        label 'python'
+    }
 
-              echo "Here should be more tests for ${imageTagTest}"
-              // delete test docker image from Jenkins site
-              sh("docker rmi --force ${imageTagTest}")
-          }
-      }
+    environment {
+        author_name = "V.Kozlov (KIT)"
+        author_email = "valentin.kozlov@kit.edu"
+        app_name = "dogs_breed_det"
+        job_location = "Pipeline-as-code/DEEP-OC-org/\
+                        DEEP-OC-dogs_breed_det"
+        job_result_url = ''
+    }
 
+    stages {
+        stage('Fetch the repository') {
+            steps {
+                checkout scm
+            }
+        }
+	
+        stage('Style analysis: PEP8') {
+            steps {
+                ToxEnvRun('pep8')
+            }
+            post {
+                always {
+                    WarningsReport('Pep8')
+                }
+            }
+        }
 
-      stage ('Build and Push docker image to registry') {
-          dir("DEEP-OC-${appName}") { 
-              sh("nvidia-docker build -t ${imageTag} -t ${imageTagLatest} .")
-              withCredentials([usernamePassword(credentialsId: "${dockerhubcredentials}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                  sh '''
-                     docker login -u "$USERNAME" -p "$PASSWORD"
-                     '''
-              }
-              sh("docker push ${imageTag}")
-              sh("docker push ${imageTagLatest}") 
-          }    
-      }
+        stage('Style analysis: Pylint') {
+            steps {
+                ToxEnvRun('pylint')
+            }
+            post {
+                always {
+                    WarningsReport('Pylint')
+                }
+            }
+        }
 
-      stage('Deploy Application') {
-      }
+        stage("Re-build DEEP-OC-dogs_breed_det Docker image") {
+            steps {
+                script {
+                    def job_result = JenkinsBuildJob("${env.job_location}")
+                    def job_result_url = job_result.absoluteUrl
+                }
+            }
+        }
 
-
-      stage ('Post Deployment') {
-          // delete docker image from Jenkins site
-          sh("docker rmi ${imageTag}")
-          sh("docker rmi ${imageTagLatest}")
-      }
-
-  } catch (e) {
-    // If there was an exception thrown, the build failed
-    currentBuild.result = "FAILED"
-    throw e
-  } finally {
-    // Success or failure, always send notifications
-    notifyBuild()
-  }
-}
-
-def notifyBuild() {
-    String buildStatus =  currentBuild.result
-    // build status of null means successful
-    buildStatus =  buildStatus ?: 'SUCCESS'
-  
-    // One can re-define default values
-    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
-    def summary = "${subject} (${env.BUILD_URL})"
-    def details = """<p>STARTED: Job '${env.JOB_NAME} - build # ${env.BUILD_NUMBER}' on $env.NODE_NAME.</p>
-      <p>TERMINATED with: ${buildStatus}
-      <p>Check console output at "<a href="${env.BUILD_URL}">${env.BUILD_URL}</a>"</p>"""
-
-
-    emailext (
-        subject: '${DEFAULT_SUBJECT}', //subject,
-        mimeType: 'text/html',
-        body: details,                 //'${DEFAULT_CONTENT}'
-        attachLog: true,
-        compressLog: true,
-        attachmentsPattern: '**/pylint.log',
-        recipientProviders: [[$class: 'CulpritsRecipientProvider'],
-                            [$class: 'DevelopersRecipientProvider'],
-                            [$class: 'RequesterRecipientProvider']]
-    )
+        stage("Email notification") {
+            steps {
+                script {
+                    def build_status =  currentBuild.result
+                    build_status =  build_status ?: 'SUCCESS'
+                    def subject = "New ${app_name} build in Jenkins@DEEP:\
+                                   ${build_status}: Job '${env.JOB_NAME}\
+                                   [${env.BUILD_NUMBER}]'"
+                    def body = "Dear ${author_name},\nA new build of\
+                                '${app_name}' DEEP application is available in\
+                                Jenkins at:\n\n\t${env.BUILD_URL}\n\nterminated\
+                                with '${build_status}' status.\n\nCheck console\
+                                output at:\n\n\t${env.BUILD_URL}/console\n\n\
+                                and resultant Docker image rebuilding job at:\
+                                \n\n\t${job_result_url}\n\nDEEP Jenkins CI\
+                                service"
+                    EmailSend(subject, body, "${author_email}")
+                }
+            }
+        }
+    }
 }

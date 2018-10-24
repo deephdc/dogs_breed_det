@@ -11,6 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+""" Python package setup
+"""
+
 import setuptools
 
 setuptools.setup(

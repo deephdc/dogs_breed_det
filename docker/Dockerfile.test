@@ -1,0 +1,30 @@
+# Base image, e.g. tensorflow/tensorflow:1.7.0
+FROM tensorflow/tensorflow:1.8.0
+
+LABEL maintainer='V.Kozlov (KIT)'
+# Dogs breed detector as example for DEEPaaS API
+
+RUN apt-get update && \ 
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /root/.cache/pip/* && \
+    rm -rf /tmp/*
+
+# Set LANG environment
+ENV LANG C.UTF-8
+
+# Set the working directory
+WORKDIR /app
+
+# Script to run pylint
+COPY dogs_breed_det/tests/run_pylint.sh /app
+
+# Copy the current directory contents into the container at /app
+ADD . /app
+
+# Install pylint and python packages listed in requirements.txt and requirements-test.txt
+RUN pip --no-cache-dir install -r /app/requirements.txt && \
+    pip --no-cache-dir install -r /app/requirements-test.txt && \
+    rm -rf /root/.cache/pip/* && \
+    rm -rf /tmp/*
+

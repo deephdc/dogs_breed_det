@@ -12,6 +12,11 @@ from six.moves import urllib
 from keras.preprocessing import image                  
 from tqdm import tqdm
 
+### dirty trick for 'truncated images':
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+###
+
 def maybe_download_and_extract(dataset=cfg.Dog_DataDir, datasetURL=cfg.Dog_DatasetURL):
   """Download and extract the zip archive.
      Based on tensorflow tutorials."""
@@ -55,35 +60,35 @@ def load_dataset(path):
     dog_targets = np_utils.to_categorical(np.array(data['target']), 133)
     return dog_files, dog_targets
 
-def dog_names_create(dogNamesFile):
+def dog_names_create(dog_names_file):
     """
     Function to return dog names based on directories in 'train'.
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
     dataImagesTrain = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, 'train','*')
-    dogNames = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
+    dog_names = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
 
-    with open(dogNamesFile, 'w') as listfile:
-        for item in dogNames:
+    with open(dog_names_file, 'w') as listfile:
+        for item in dog_names:
             listfile.write("%s\n" % item)
-    return dogNames
+    return dog_names
 
-def dog_names_read(dogNamesFile):
+def dog_names_read(dog_names_file):
     """
     Function to return dog names read from the file.
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
     
-    if os.path.isfile(dogNamesFile):
-        with open(dogNamesFile, 'r') as listfile:
-            dogNames = [ line.rstrip('\n') for line in listfile ]
+    if os.path.isfile(dog_names_file):
+        with open(dog_names_file, 'r') as listfile:
+            dog_names = [ line.rstrip('\n') for line in listfile ]
     else:
-        print("Warning! File ", dogNamesFile, " doesn't exist. Trying to create it..")
-        dogNames = dog_names_create(dogNamesFile)
+        print("Warning! File ", dog_names_file, " doesn't exist. Trying to create it..")
+        dog_names = dog_names_create(dog_names_file)
 
-    return dogNames
+    return dog_names
 
 
 def path_to_tensor(img_path):
