@@ -53,18 +53,10 @@ def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
     
-    train_net, _, _ = bfeatures.load_features_set('train', network)
-    # introduce bottleneck_features shapes manually 
-    features_shape = {'VGG16': [7, 7, 512],
-                      'VGG19': [7, 7, 512],
-                      'Resnet50': [1, 1, 2048],
-                      'InceptionV3': [5, 5, 2048],
-                      'Xception': [7, 7, 2048],
-    }
+    train_net = bfeatures.load_features_set('train', network)
 
     net_model = Sequential()
     net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
-    #net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
     net_model.add(Dense(nclasses, activation='softmax'))
 
     print("__"+network+"__: ")
@@ -91,7 +83,7 @@ def predict_file(img_path, network='Resnet50'):
             'Xception': bfeatures.extract_Xception,
     }
 
-    # clear possible pre-existing sessions. important!
+    # clear possible pre-existing sessions. IMPORTANT!
     backend.clear_session()
     
     net_model = build_model(network)
@@ -163,10 +155,6 @@ def train(nepochs=10, network='Resnet50'):
     valid_files, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
     test_files, test_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'test'))
     
-    #train_net = bfeatures.build_features(train_files, 'train', network)
-    #valid_net = bfeatures.build_features(valid_files, 'valid', network)
-    #test_net = bfeatures.build_features(test_files, 'test', network)
-
     train_net = bfeatures.load_features_set('train', network)
     valid_net = bfeatures.load_features_set('valid', network)
     test_net = bfeatures.load_features_set('test', network)
