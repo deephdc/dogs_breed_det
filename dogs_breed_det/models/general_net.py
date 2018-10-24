@@ -53,7 +53,7 @@ def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
     
-    train_net, _, _ = bfeatures.load_features(network)
+    train_net, _, _ = bfeatures.load_features_set('train', network)
     # introduce bottleneck_features shapes manually 
     features_shape = {'VGG16': [7, 7, 512],
                       'VGG19': [7, 7, 512],
@@ -167,7 +167,10 @@ def train(nepochs=10, network='Resnet50'):
     #valid_net = bfeatures.build_features(valid_files, 'valid', network)
     #test_net = bfeatures.build_features(test_files, 'test', network)
 
-    train_net, valid_net, test_net = bfeatures.load_features(network)
+    train_net = bfeatures.load_features_set('train', network)
+    valid_net = bfeatures.load_features_set('valid', network)
+    test_net = bfeatures.load_features_set('test', network)
+    
     print("Sizes of bottleneck_features (train, valid, test):")
     print(train_net.shape, valid_net.shape, test_net.shape)
     data_size = {

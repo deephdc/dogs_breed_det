@@ -70,7 +70,7 @@ def main():
     if args.method == 'get_metadata':
         get_metadata()       
     elif args.method == 'predict_file':
-        predict_file(args.file, model=args.model)
+        predict_file(args.file)
     elif args.method == 'predict_data':
         predict_data(args.file)
     elif args.method == 'predict_url':
