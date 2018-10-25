@@ -6,7 +6,7 @@ import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
 from six.moves import urllib
 
-def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_file = 'Dog_Resnet50_features_train.npz'):
+def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_file = 'Dogs_Resnet50_features_train.npz'):
     """
     Download bottleneck features if they do not exist locally.
     :param bottleneck_storage: base url from where to download file
@@ -59,7 +59,7 @@ def build_features(img_files, set_type, network = 'Resnet50'):
     
     bottleneck_features = nets[network](dutils.paths_to_tensor(img_files))
     bottleneck_file = os.path.join(cfg.BASE_DIR, 'models', 'bottleneck_features', 
-                                   'Dog_' + network + '_features_' + set_type)
+                                   'Dogs_' + network + '_features_' + set_type)
 
     if set_type == 'train':
         np.savez(bottleneck_file, train=bottleneck_features)
@@ -80,7 +80,7 @@ def load_features_set(data_type, network = 'Resnet50'):
        Only one dataset, e.g. train, valid, test is loaded
     """
 
-    bottleneck_file = 'Dog_' + network + '_features_' + data_type + '.npz'
+    bottleneck_file = 'Dogs_' + network + '_features_' + data_type + '.npz'
     bottleneck_exists = maybe_download_bottleneck(cfg.Dog_Storage, bottleneck_file)
     
     if (bottleneck_exists):
