@@ -6,6 +6,25 @@ import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
 from six.moves import urllib
 
+def set_bottleneck_file(dataset_type, network = 'Resnet50', return_type = 'path'):
+    """ Function
+        Returns according to the dataset_type and network either 
+        directory with the file, filename, or full path to the file (default)
+    """
+    # directory where file is
+    file_dir = os.path.join(cfg.BASE_DIR, 'models', 'bottleneck_features')
+    # only file name
+    file_name = 'Dogs_' + network + '_features_' + dataset_type  + '.npz'
+    # full path to the file
+    file_path = os.path.join(file_dir, file_name)
+    
+    if return_type == 'dir':
+        return file_dir
+    elif return_type == 'file':
+        return file_name
+    else:
+        return file_path
+
 def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_file = 'Dogs_Resnet50_features_train.npz'):
     """
     Download bottleneck features if they do not exist locally.
@@ -15,11 +34,11 @@ def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_f
     """
     bottleneck_exist = False
     
-    bottleneck_maindir = os.path.join(cfg.BASE_DIR,'models','bottleneck_features')
-    if not os.path.exists(bottleneck_maindir):
-        os.makedirs(bottleneck_maindir)
+    bottleneck_dir = set_bottleneck_file('train', return_type='dir')
+    if not os.path.exists(bottleneck_dir):
+        os.makedirs(bottleneck_dir)
 
-    bottleneck_path = os.path.join(bottleneck_maindir, bottleneck_file)
+    bottleneck_path = os.path.join(bottleneck_dir, bottleneck_file)
     bottleneck_url = bottleneck_storage.rstrip('/') + '/' + bottleneck_file
 
     # if bottleneck_features file does not exist, download it
@@ -47,7 +66,7 @@ def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_f
     return bottleneck_exist
         
         
-def build_features(img_files, set_type, network = 'Resnet50'):
+def build_features(img_files, dataset_type, network = 'Resnet50'):
     """Build bottleneck_features for set of files"""
 
     nets = {'VGG16': extract_VGG16,
@@ -58,40 +77,44 @@ def build_features(img_files, set_type, network = 'Resnet50'):
     }
     
     bottleneck_features = nets[network](dutils.paths_to_tensor(img_files))
-    bottleneck_file = os.path.join(cfg.BASE_DIR, 'models', 'bottleneck_features', 
-                                   'Dogs_' + network + '_features_' + set_type)
+    bottleneck_path = set_bottleneck_file(dataset_type, network,
+                                          return_type='path')
 
-    if set_type == 'train':
-        np.savez(bottleneck_file, train=bottleneck_features)
-    elif set_type == 'test':
-        np.savez(bottleneck_file, test=bottleneck_features)
-    elif set_type == 'valid':
-        np.savez(bottleneck_file, valid=bottleneck_features)
+    if dataset_type == 'train':
+        np.savez(bottleneck_path, train=bottleneck_features)
+    elif dataset_type == 'test':
+        np.savez(bottleneck_path, test=bottleneck_features)
+    elif dataset_type == 'valid':
+        np.savez(bottleneck_path, valid=bottleneck_features)
     else:
-        np.savez(bottleneck_file, features=bottleneck_features)
+        np.savez(bottleneck_path, features=bottleneck_features)
     
     print("[INFO] Bottleneck features size (build_features):", bottleneck_features.shape)    
     
     return bottleneck_features
 
 
-def load_features_set(data_type, network = 'Resnet50'):
+def load_features_set(dataset_type, network = 'Resnet50'):
     """Load features from the file
        Only one dataset, e.g. train, valid, test is loaded
     """
 
-    bottleneck_file = 'Dogs_' + network + '_features_' + data_type + '.npz'
-    bottleneck_exists = maybe_download_bottleneck(cfg.Dog_Storage, bottleneck_file)
+    bottleneck_file = set_bottleneck_file(dataset_type, 
+                                          network, 
+                                          return_type='file')
+    bottleneck_exists = maybe_download_bottleneck(cfg.Dog_Storage, 
+                                                  bottleneck_file)
     
     if (bottleneck_exists):
-        bottleneck_path = os.path.join(cfg.BASE_DIR,'models','bottleneck_features', bottleneck_file)
-        bottleneck_features = np.load(bottleneck_path)[data_type]        
+        print("[INFO] Using %s" % bottleneck_file)
+        bottleneck_path = set_bottleneck_file(dataset_type, network)
+        bottleneck_features = np.load(bottleneck_path)[dataset_type]       
     else:
         print("[INFO] %s was neither found nor downloaded. Trying to build. It may take time .. " 
               % bottleneck_file)
         Dog_ImagesDir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir)
-        img_files, targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,data_type))
-        bottleneck_features = build_features(img_files, data_type, network)
+        img_files, targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,dataset_type))
+        bottleneck_features = build_features(img_files, dataset_type, network)
 
     return bottleneck_features
 
