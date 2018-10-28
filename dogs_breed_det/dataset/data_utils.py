@@ -18,6 +18,24 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###
 
 
+def rclone_call(src_path, dest_dir, cmd = 'copy', get_output=False):
+    """ Function
+        rclone calls
+    """
+    if cmd == 'copy':
+        command = (['rclone', 'copy', '--progress', src_path, dest_dir]) #'--progress', 
+    elif cmd == 'ls':
+        command = (['rclone', 'ls', src_path])
+    elif cmd == 'check':
+        command = (['rclone', 'check', src_path, dest_dir])
+    
+    if get_output:
+        result = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else:
+        result = subprocess.Popen(command, stderr=subprocess.PIPE) #stdout=subprocess.PIPE,
+    output, error = result.communicate()
+    return output, error
+
 def rclone_copy(src_path, dest_dir, src_type='file'):
     """ Function for rclone call to copy data (sync?)
     :param src_path: full path to source (file or directory)
@@ -25,37 +43,41 @@ def rclone_copy(src_path, dest_dir, src_type='file'):
     :param src_type: if source is file (default) or directory
     :return: if destination was downloaded, and possible error 
     """
-    
-    command_ls = (['rclone', 'ls', src_path])
-    command_copy = (['rclone', 'copy', '--progress', src_path, dest_dir]) #'--progress',
+
     error_out = None
     
     if src_type == 'file':
+        src_dir = os.path.dirname(src_path)
         dest_file = src_path.split('/')[-1]
         dest_path = os.path.join(dest_dir, dest_file)
     else:
+        src_dir = src_path
         dest_path =  dest_dir
 
     # check first if we find src_path
-    result = subprocess.Popen(command_ls, stderr=subprocess.PIPE) #stdout=subprocess.PIPE,
-    output, error = result.communicate()
+    output, error = rclone_call(src_path, dest_dir, cmd='ls')
     if error:
         print('[ERROR] %s (src):\n%s' % (src_path, error))
         error_out = error
         dest_exist = False
     else:
         # if src_path exists, copy it
-        result = subprocess.Popen(command_copy, stderr=subprocess.PIPE) #stdout=subprocess.PIPE,
-        output, error = result.communicate()
+        output, error = rclone_call(src_path, dest_dir, cmd='copy')
         if not error:
-            try:
-                statinfo = os.stat(dest_path)
-            except OSError as file_error:
-                print('[ERROR] %s (dest):\n%s' % (dest_path, file_error))
-                error_out = file_error
-                dest_exist = False                    
-            else: 
-                print('[INFO] Successfully downloaded %s %d bytes' % (dest_path, statinfo.st_size))
+            # compare two directories, if copied file appears in output
+            # as not found or not matching -> Error
+            print('[INFO] File %s copied. Check if (src) and (dest) really match..' % (dest_file))
+            output, error = rclone_call(src_dir, dest_dir, cmd='check')
+            if 'ERROR : ' + dest_file in error:
+                print('[ERROR] %s (src) and %s (dest) do not match!' % (src_path, dest_path))
+                error_out = 'Copy failed: ' + src_path + ' (src) and ' + \
+                             dest_path + ' (dest) do not match'
+                dest_exist = False
+            else:
+                output, error = rclone_call(dest_path, dest_dir, 
+                                            cmd='ls', get_output = True)
+                file_size = [ elem for elem in output.split(' ') if elem.isdigit() ][0]
+                print('[INFO] Checked: Successfully copied to %s %s bytes' % (dest_path, file_size))
                 dest_exist = True
         else:
             print('[ERROR] %s (src):\n%s' % (dest_path, error))

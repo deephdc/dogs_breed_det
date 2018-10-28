@@ -159,7 +159,7 @@ def train(nepochs=10, network='Resnet50'):
     valid_net = bfeatures.load_features_set('valid', network)
     test_net = bfeatures.load_features_set('test', network)
     
-    print("Sizes of bottleneck_features (train, valid, test):")
+    print('[INFO] Sizes of bottleneck_features (train, valid, test):')
     print(train_net.shape, valid_net.shape, test_net.shape)
     data_size = {
         'train': len(train_targets),
@@ -185,7 +185,9 @@ def train(nepochs=10, network='Resnet50'):
     
     # report test accuracy
     test_accuracy = 100.*np.sum(np.array(net_predictions)==np.argmax(test_targets, axis=1))/float(len(net_predictions))
-    print('Test accuracy: %.4f%%' % test_accuracy)
+    print('[INFO] Test accuracy: %.4f%%' % test_accuracy)
     
+    dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/models'
+    dutils.rclone_copy(saved_weights_path, dest_dir)
 
     return mutils.format_train(network, test_accuracy, nepochs, data_size)
