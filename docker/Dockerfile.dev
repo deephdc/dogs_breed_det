@@ -23,11 +23,25 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     rm -rf /root/.cache/pip/* && \
     rm -rf /tmp/*
 
+# install rclone
+RUN wget https://downloads.rclone.org/rclone-current-linux-amd64.deb && \
+    dpkg -i rclone-current-linux-amd64.deb && \
+    apt install -f && \
+    rm rclone-current-linux-amd64.deb && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /root/.cache/pip/* && \
+    rm -rf /tmp/*
+
+
 # Set LANG environment
 ENV LANG C.UTF-8
 
 # Set the working directory
 WORKDIR /app
+
+# Copy rclone.conf (encrypted)
+#COPY rclone.conf /root/.config/rclone/
 
 # Install python packages listed in requirements.txt
 COPY requirements-dev.txt /root

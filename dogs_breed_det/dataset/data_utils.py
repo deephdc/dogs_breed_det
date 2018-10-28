@@ -2,12 +2,12 @@
 import os
 import sys
 import zipfile
+import subprocess
 import numpy as np
 import dogs_breed_det.config as cfg
 from sklearn.datasets import load_files       
 from keras.utils import np_utils
 from glob import glob
-from six.moves import urllib
 
 from keras.preprocessing import image                  
 from tqdm import tqdm
@@ -17,9 +17,58 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###
 
-def maybe_download_and_extract(dataset=cfg.Dog_DataDir, datasetURL=cfg.Dog_DatasetURL):
+
+def rclone_copy(src_path, dest_dir, src_type='file'):
+    """ Function for rclone call to copy data (sync?)
+    :param src_path: full path to source (file or directory)
+    :param dest_dir: full path to destination directory (not file!)
+    :param src_type: if source is file (default) or directory
+    :return: if destination was downloaded, and possible error 
+    """
+    
+    command_ls = (['rclone', 'ls', src_path])
+    command_copy = (['rclone', 'copy', '--progress', src_path, dest_dir]) #'--progress',
+    error_out = None
+    
+    if src_type == 'file':
+        dest_file = src_path.split('/')[-1]
+        dest_path = os.path.join(dest_dir, dest_file)
+    else:
+        dest_path =  dest_dir
+
+    # check first if we find src_path
+    result = subprocess.Popen(command_ls, stderr=subprocess.PIPE) #stdout=subprocess.PIPE,
+    output, error = result.communicate()
+    if error:
+        print('[ERROR] %s (src):\n%s' % (src_path, error))
+        error_out = error
+        dest_exist = False
+    else:
+        # if src_path exists, copy it
+        result = subprocess.Popen(command_copy, stderr=subprocess.PIPE) #stdout=subprocess.PIPE,
+        output, error = result.communicate()
+        if not error:
+            try:
+                statinfo = os.stat(dest_path)
+            except OSError as file_error:
+                print('[ERROR] %s (dest):\n%s' % (dest_path, file_error))
+                error_out = file_error
+                dest_exist = False                    
+            else: 
+                print('[INFO] Successfully downloaded %s %d bytes' % (dest_path, statinfo.st_size))
+                dest_exist = True
+        else:
+            print('[ERROR] %s (src):\n%s' % (dest_path, error))
+            error_out = error
+            dest_exist = False
+
+    return dest_exist, error_out
+
+
+def maybe_download_and_extract(dataset_storage=cfg.Dog_RemoteStorage, 
+                               dataset=cfg.Dog_DataDir):
   """Download and extract the zip archive.
-     Based on tensorflow tutorials."""
+  """
   data_dir = os.path.join(cfg.BASE_DIR,'data')
   if not os.path.exists(data_dir):
       os.makedirs(data_dir)
@@ -28,24 +77,20 @@ def maybe_download_and_extract(dataset=cfg.Dog_DataDir, datasetURL=cfg.Dog_Datas
   if not os.path.exists(rawdata_dir):
       os.makedirs(rawdata_dir)
   
+  dataset_URL = dataset_storage.rstrip('/') + \
+               os.path.join('/data/raw','dogImages.zip')
 
   if not os.path.exists(os.path.join(data_dir, dataset)):
-      filename = datasetURL.split('/')[-1]
-      filepath = os.path.join(rawdata_dir, filename)
+      file_name = dataset_URL.split('/')[-1]
+      file_path = os.path.join(rawdata_dir, file_name)
       
-      if not os.path.exists(filepath):
-          def _progress(count, block_size, total_size):
-              sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
-                  float(count * block_size) / float(total_size) * 100.0))
-              sys.stdout.flush()
-          filepath, _ = urllib.request.urlretrieve(datasetURL, filepath, _progress)
-          print()
-          statinfo = os.stat(filepath)
-          print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
+      if not os.path.exists(file_path):
+          status, _ = rclone_copy(dataset_URL, rawdata_dir)
 
-      dataset_zip = zipfile.ZipFile(filepath, 'r')    
-      dataset_zip.extractall(data_dir)
-      dataset_zip.close()
+      if os.path.exists(file_path):
+          dataset_zip = zipfile.ZipFile(file_path, 'r')    
+          dataset_zip.extractall(data_dir)
+          dataset_zip.close()
 
 
 # define function to load train, test, and validation datasets

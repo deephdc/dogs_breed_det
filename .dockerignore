@@ -76,10 +76,16 @@ target/
 .ipynb_checkpoints/
 
 # exclude data from source control by default
-/data/raw/*
-/data/*
+data/raw/*
+data/*
 
-/models/*
+models/*
+
+# exclude rclone or .rclone or rclone.conf
+.rclone/
+rclone/
+.rclone
+rclone.conf
 
 # Mac OS-specific storage files
 .DS_Store

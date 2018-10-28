@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
-from six.moves import urllib
+
 
 def set_bottleneck_file(dataset_type, network = 'Resnet50', return_type = 'path'):
     """ Function
@@ -25,7 +25,8 @@ def set_bottleneck_file(dataset_type, network = 'Resnet50', return_type = 'path'
     else:
         return file_path
 
-def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_file = 'Dogs_Resnet50_features_train.npz'):
+def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_RemoteStorage, 
+                              bottleneck_file = 'Dogs_Resnet50_features_train.npz'):
     """
     Download bottleneck features if they do not exist locally.
     :param bottleneck_storage: base url from where to download file
@@ -39,32 +40,17 @@ def maybe_download_bottleneck(bottleneck_storage = cfg.Dog_Storage, bottleneck_f
         os.makedirs(bottleneck_dir)
 
     bottleneck_path = os.path.join(bottleneck_dir, bottleneck_file)
-    bottleneck_url = bottleneck_storage.rstrip('/') + '/' + bottleneck_file
+    bottleneck_URL = bottleneck_storage.rstrip('/') + \
+                     os.path.join('/models/bottleneck_features', bottleneck_file)
 
     # if bottleneck_features file does not exist, download it
-    if not os.path.exists(bottleneck_path):
-        def _progress(count, block_size, total_size):
-            sys.stdout.write('\r>> Downloading %s %.1f%%' % (bottleneck_file,
-                float(count * block_size) / float(total_size) * 100.0))
-            sys.stdout.flush()
-        try:
-            #check that URL exists
-            response = urllib.request.urlopen(bottleneck_url, timeout=3)
-        except (urllib.error.URLError, urllib.error.HTTPError) as error:
-            print('[INFO] Unsuccessfully downloaded %s' % bottleneck_file)
-            print('[INFO] Download Error: %s' % error.reason)            
-            bottleneck_exist = False
-        else:
-            bottleneck_path, _ = urllib.request.urlretrieve(bottleneck_url, bottleneck_path, _progress)
-            print()
-            statinfo = os.stat(bottleneck_path)
-            print('[INFO] Successfully downloaded', bottleneck_file, statinfo.st_size, 'bytes.')
-            bottleneck_exist = True
+    if not os.path.exists(bottleneck_path):   
+        bottleneck_exist, _ = dutils.rclone_copy(bottleneck_URL, bottleneck_dir)
     else:
         bottleneck_exist = True
         
     return bottleneck_exist
-        
+
         
 def build_features(img_files, dataset_type, network = 'Resnet50'):
     """Build bottleneck_features for set of files"""
@@ -102,7 +88,7 @@ def load_features_set(dataset_type, network = 'Resnet50'):
     bottleneck_file = set_bottleneck_file(dataset_type, 
                                           network, 
                                           return_type='file')
-    bottleneck_exists = maybe_download_bottleneck(cfg.Dog_Storage, 
+    bottleneck_exists = maybe_download_bottleneck(cfg.Dog_RemoteStorage, 
                                                   bottleneck_file)
     
     if (bottleneck_exists):
