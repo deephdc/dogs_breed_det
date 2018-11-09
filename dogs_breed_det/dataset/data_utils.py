@@ -25,14 +25,14 @@ def rclone_call(src_path, dest_dir, cmd = 'copy', get_output=False):
     if cmd == 'copy':
         command = (['rclone', 'copy', '--progress', src_path, dest_dir]) #'--progress', 
     elif cmd == 'ls':
-        command = (['rclone', 'ls', src_path])
+        command = (['rclone', 'ls', '-L', src_path])
     elif cmd == 'check':
         command = (['rclone', 'check', src_path, dest_dir])
     
     if get_output:
         result = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
-        result = subprocess.Popen(command, stderr=subprocess.PIPE) #stdout=subprocess.PIPE,
+        result = subprocess.Popen(command, stderr=subprocess.PIPE)
     output, error = result.communicate()
     return output, error
 
@@ -87,33 +87,68 @@ def rclone_copy(src_path, dest_dir, src_type='file'):
     return dest_exist, error_out
 
 
-def maybe_download_and_extract(dataset_storage=cfg.Dog_RemoteStorage, 
-                               dataset=cfg.Dog_DataDir):
-  """Download and extract the zip archive.
-  """
-  data_dir = os.path.join(cfg.BASE_DIR,'data')
-  if not os.path.exists(data_dir):
-      os.makedirs(data_dir)
+def maybe_download_data(remote_storage = cfg.Dog_RemoteStorage, 
+                        data_dir = '/models/bottleneck_features',
+                        data_file = 'Resnet50_features_train.npz'):
+    """
+    Download data if it does not exist locally.
+    :param remote_storage: remote storage where to download from
+    :param data_dir: remote _and_ local dir to put data
+    :param data_file: name of the file to download
+    """
+    # status for data if exists or not
+    status = False
+    error_out = None
 
-  rawdata_dir = os.path.join(data_dir,'raw')
-  if not os.path.exists(rawdata_dir):
-      os.makedirs(rawdata_dir)
+    data_dir = data_dir.lstrip('/') #join doesn't work if data_dir starts with '/'!
+    data_dir = data_dir.rstrip('/')
+
+    local_dir = os.path.join(cfg.BASE_DIR, data_dir)
+    local_path = os.path.join(local_dir, data_file)
+    # if data_file does not exist locally, download it
+    if not os.path.exists(local_path):
+        remote_url = remote_storage.rstrip('/') + '/' + \
+                     os.path.join(data_dir, data_file)        
+        print("[INFO] Url: %s" % (remote_url))
+        print("[INFO] Local path: %s" % (local_path))        
+        #check that every sub directory exists locally, if not -> create
+        data_subdirs = data_dir.split('/')
+        sub_dir = cfg.BASE_DIR
+        for sdir in data_subdirs:
+            sub_dir = os.path.join(sub_dir, sdir)
+            if not os.path.exists(sub_dir):
+                os.makedirs(sub_dir)
+        status, error_out = rclone_copy(remote_url, local_dir)
+    else:
+        status = True
+        error_out = None
+        
+    return status, error_out
+
+def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
+                             data_dir='/data/raw',
+                             data_file='dogImages.zip'):
+    """Download and extract the zip archive.
+    """
   
-  dataset_URL = dataset_storage.rstrip('/') + \
-               os.path.join('/data/raw','dogImages.zip')
+    # for now we assume that everything gets unzipped in ~/data directory
+    unzip_dir = os.path.join(cfg.BASE_DIR, 'data')
+  
+    # remove last extension, should be .zip
+    data_name = os.path.splitext(data_file)[0]
 
-  if not os.path.exists(os.path.join(data_dir, dataset)):
-      file_name = dataset_URL.split('/')[-1]
-      file_path = os.path.join(rawdata_dir, file_name)
-      
-      if not os.path.exists(file_path):
-          status, _ = rclone_copy(dataset_URL, rawdata_dir)
+    # if 'data_name' is not present locally, 
+    # try to download and de-archive corresponding .zip file
+    if not os.path.exists(os.path.join(cfg.BASE_DIR, unzip_dir, data_name)):
+        # check if .zip file present in locally
+        status, _ = maybe_download_data(data_storage, data_dir, data_file)
 
-      if os.path.exists(file_path):
-          dataset_zip = zipfile.ZipFile(file_path, 'r')    
-          dataset_zip.extractall(data_dir)
-          dataset_zip.close()
-
+        # if .zip is present locally, de-archive it
+        file_path = os.path.join(cfg.BASE_DIR, data_dir, data_file)
+        if os.path.exists(file_path):
+            data_zip = zipfile.ZipFile(file_path, 'r')
+            data_zip.extractall(unzip_dir)
+            data_zip.close()
 
 # define function to load train, test, and validation datasets
 def load_dataset(path):
@@ -127,7 +162,7 @@ def load_dataset(path):
     dog_targets = np_utils.to_categorical(np.array(data['target']), 133)
     return dog_files, dog_targets
 
-def dog_names_create(dog_names_file):
+def dog_names_create(dog_names_path):
     """
     Function to return dog names based on directories in 'train'.
     Also creates .txt file with the names
@@ -136,24 +171,35 @@ def dog_names_create(dog_names_file):
     dataImagesTrain = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, 'train','*')
     dog_names = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
 
-    with open(dog_names_file, 'w') as listfile:
+    with open(dog_names_path, 'w') as listfile:
         for item in dog_names:
             listfile.write("%s\n" % item)
+       
+    dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/data'
+    print("[INFO] Upload %s to %s" % (dog_names_path, dest_dir))
+    rclone_copy(dog_names_path, dest_dir)
+            
     return dog_names
 
-def dog_names_read(dog_names_file):
+def dog_names_read(dog_names_path):
     """
     Function to return dog names read from the file.
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
-    
-    if os.path.isfile(dog_names_file):
-        with open(dog_names_file, 'r') as listfile:
-            dog_names = [ line.rstrip('\n') for line in listfile ]
-    else:
-        print("Warning! File ", dog_names_file, " doesn't exist. Trying to create it..")
-        dog_names = dog_names_create(dog_names_file)
+
+    if not os.path.isfile(dog_names_path):
+        print("[WARNING!] File %s doesn't exist. Trying to download.." % (dog_names_path))
+        data_file = dog_names_path.split('/')[-1]
+        status_ok, _ = maybe_download_data(data_dir='/data', data_file=data_file)
+        
+        if not status_ok:
+            print("[WARNING!] File %s wasn't downloaded. Trying to create it.." % (dog_names_path))
+            dog_names = dog_names_create(dog_names_path)
+
+    # we expect that file finally exists
+    with open(dog_names_path, 'r') as listfile:
+        dog_names = [ line.rstrip('\n') for line in listfile ]
 
     return dog_names
 

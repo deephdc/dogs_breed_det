@@ -93,13 +93,13 @@ def predict_file(img_path, network='Resnet50'):
     
     # extract bottleneck features
     bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
-    print("Bottleneck feature size:", bottleneck_feature.shape)
+    print("[INFO] Bottleneck feature size:", bottleneck_feature.shape)
+    dog_names  = dutils.dog_names_read(cfg.Dog_LabelsFile)    
     # obtain predicted vector
     predicted_vector = net_model.predict(bottleneck_feature)
-    print("Sum:", np.sum(predicted_vector))
+    print("[INFO] Sum:", np.sum(predicted_vector))
     # return dog breed that is predicted by the model
     idxs = np.argsort(predicted_vector[0])[::-1][:5] 
-    dog_names  = dutils.dog_names_read(cfg.Dog_LabelsFile)
     #dog_names_best = [ dog_names[i] for i in idxs ]
     dog_names_best = []
     probs_best = []
@@ -147,9 +147,6 @@ def train(nepochs=10, network='Resnet50'):
     Train network (transfer learning)
     """
     
-    # check if directories for train, tests, and valid exist:
-    dutils.maybe_download_and_extract()
-    
     Dog_ImagesDir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir)
     train_files, train_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'train'))
     valid_files, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
@@ -187,7 +184,9 @@ def train(nepochs=10, network='Resnet50'):
     test_accuracy = 100.*np.sum(np.array(net_predictions)==np.argmax(test_targets, axis=1))/float(len(net_predictions))
     print('[INFO] Test accuracy: %.4f%%' % test_accuracy)
     
+    # copy trained weights back to nextcloud
     dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/models'
+    print("[INFO] Upload %s to %s" % (saved_weights_path, dest_dir))    
     dutils.rclone_copy(saved_weights_path, dest_dir)
 
     return mutils.format_train(network, test_accuracy, nepochs, data_size)
