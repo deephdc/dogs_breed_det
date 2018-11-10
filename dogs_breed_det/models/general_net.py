@@ -12,6 +12,7 @@ import pkg_resources
 import werkzeug.exceptions as exceptions
 import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
+import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
 from keras.layers import Dense, GlobalAveragePooling2D
@@ -46,6 +47,12 @@ def get_metadata():
 
     return meta
         
+
+def prepare_data(network='Resnet50'):
+    """ Function to prepare data
+    """
+    mdata.prepare_data(network)
+    
 
 def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     """
@@ -86,9 +93,10 @@ def predict_file(img_path, network='Resnet50'):
     # clear possible pre-existing sessions. IMPORTANT!
     backend.clear_session()
     
-    net_model = build_model(network)
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
                                       'weights.best.' + network + '.hdf5')
+                                      
+    net_model = build_model(network)
     net_model.load_weights(saved_weights_path)
     
     # extract bottleneck features

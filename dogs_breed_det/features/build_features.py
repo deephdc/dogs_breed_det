@@ -10,12 +10,12 @@ def set_features_file(dataset_type, network = 'Resnet50', return_type = 'path'):
         Returns according to the dataset_type and network either 
         directory with the file, filename, or full path to the file (default)
     """
-    # directory where file is
-    file_dir = os.path.join(cfg.BASE_DIR, 'models', 'bottleneck_features')
+    # directory where file is, not the full path!
+    file_dir = os.path.join('data', 'bottleneck_features')
     # only file name
     file_name = 'Dogs_' + network + '_features_' + dataset_type  + '.npz'
     # full path to the file
-    file_path = os.path.join(file_dir, file_name)
+    file_path = os.path.join(cfg.BASE_DIR, file_dir, file_name)
     
     if return_type == 'dir':
         return file_dir
@@ -61,9 +61,10 @@ def check_features_set(data_type, network = 'Resnet50'):
     """Check if features file exists locally
        Only one dataset, e.g. train, valid, test is checked
     """
+    data_dir = set_features_file(data_type, network, return_type='dir')
     bottleneck_file =  set_features_file(data_type, network, return_type='file')
     bottleneck_exists, _ = dutils.maybe_download_data(
-                                    data_dir='/models/bottleneck_features',
+                                    data_dir=data_dir,
                                     data_file = bottleneck_file)        
 
     if not bottleneck_exists:
@@ -74,14 +75,17 @@ def check_features_set(data_type, network = 'Resnet50'):
         
         # Upload to nextcloud newly created file
         bottleneck_path = set_features_file(data_type, network)
-        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/models/bottleneck_features'
+        bottleneck_exists = True if os.path.exists(bottleneck_path) else False
+        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + data_dir
+        print("[INFO] Upload %s to %s" % (bottleneck_path, dest_dir))        
         dutils.rclone_copy(bottleneck_path, dest_dir)
+        
+    return bottleneck_exists
 
 def load_features_set(data_type, network = 'Resnet50'):
     """Load features from the file
        Only one dataset, e.g. train, valid, test is loaded
     """
-    check_features_set(data_type, network)
     
     bottleneck_path = set_features_file(data_type, network)
     print("[INFO] Using %s" % bottleneck_path)

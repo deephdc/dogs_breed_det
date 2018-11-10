@@ -130,7 +130,8 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
                              data_file='dogImages.zip'):
     """Download and extract the zip archive.
     """
-  
+
+    data_dir = data_dir.lstrip('/')
     # for now we assume that everything gets unzipped in ~/data directory
     unzip_dir = os.path.join(cfg.BASE_DIR, 'data')
   
@@ -139,12 +140,17 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
 
     # if 'data_name' is not present locally, 
     # try to download and de-archive corresponding .zip file
-    if not os.path.exists(os.path.join(cfg.BASE_DIR, unzip_dir, data_name)):
+    unzip_dir_data = os.path.join(unzip_dir, data_name)
+    if not os.path.exists(unzip_dir_data):
+        print("[INFO] %s does not exist, trying dowload zipped file %s" % 
+              (unzip_dir_data, data_file))
         # check if .zip file present in locally
-        status, _ = maybe_download_data(data_storage, data_dir, data_file)
-
+        status, _ = maybe_download_data(remote_storage = data_storage, 
+                                        data_dir = data_dir, 
+                                        data_file = data_file)
         # if .zip is present locally, de-archive it
         file_path = os.path.join(cfg.BASE_DIR, data_dir, data_file)
+        print(file_path)
         if os.path.exists(file_path):
             data_zip = zipfile.ZipFile(file_path, 'r')
             data_zip.extractall(unzip_dir)
