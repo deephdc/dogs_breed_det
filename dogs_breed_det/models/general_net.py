@@ -104,7 +104,7 @@ def predict_file(img_path, network='Resnet50'):
     # check if the weights file exists locally. if not -> try to download
     status_weights, _ = dutils.maybe_download_data(data_dir='/models', 
                                                    data_file = weights_file)
-                                      
+
     if status_weights:
         net_model = build_model(network)
         net_model.load_weights(saved_weights_path)
