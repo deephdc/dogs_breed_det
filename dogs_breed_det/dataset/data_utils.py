@@ -78,7 +78,7 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
                     print('[ERROR] %s (src) and %s (dest) do not match!' % (src_path, dest_path))
                     error_out = 'Copy failed: ' + src_path + ' (src) and ' + \
                                  dest_path + ' (dest) do not match'
-                    dest_exist = False            
+                    dest_exist = False     
         else:
             print('[ERROR] %s (src):\n%s' % (dest_path, error))
             error_out = error
