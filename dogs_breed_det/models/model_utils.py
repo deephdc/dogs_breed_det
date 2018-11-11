@@ -39,7 +39,7 @@ def wikipedia_link(pred_lab):
     return link
 
 
-def format_train(network, accuracy, nepochs, data_size):
+def format_train(network, accuracy, nepochs, data_size, time_prepare, mn_train, std_train):
     d = {
         "status": "ok",
          "training": [],
@@ -52,6 +52,9 @@ def format_train(network, accuracy, nepochs, data_size):
         "train set (images)": data_size['train'],
         "validation set (images)": data_size['valid'],
         "test set (images)": data_size['test'],
+        "time to prepare": time_prepare,
+        "mean per epoch (train)(s)": mn_train,
+        "std (train)(s)": std_train,
     }
     
     d["training"].append(train_info)

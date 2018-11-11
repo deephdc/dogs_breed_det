@@ -6,6 +6,8 @@ Created on Mon Sep  3 21:29:57 2018
 """
 
 import os
+import time
+import keras
 import tempfile
 import numpy as np
 import pkg_resources
@@ -22,6 +24,22 @@ from keras import backend
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 
+class TimeHistory(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.total_duration = 0.
+        self.durations = []
+        self.val_acc = 0.
+        self.val_loss = 0.
+
+    def on_epoch_begin(self, epoch, logs={}):
+        self.epoch_time_start = time.time()
+
+    def on_epoch_end(self, epoch, logs={}):
+        duration_epoch = time.time() - self.epoch_time_start
+        self.total_duration += duration_epoch
+        self.durations.append(duration_epoch)
+        self.val_acc = logs.get('val_acc')
+        self.val_loss = logs.get('val_loss')
 
 def get_metadata():
     """
@@ -169,7 +187,9 @@ def train(nepochs=10, network='Resnet50'):
     Train network (transfer learning)
     """
     # check that all necessary data is there
+    time_start = time.time()
     prepare_data(network)
+    time_prepare = time.time() - time_start
     
     train_targets = dutils.load_targets('train')
     valid_targets = dutils.load_targets('valid')
@@ -195,10 +215,14 @@ def train(nepochs=10, network='Resnet50'):
     backend.clear_session()
  
     net_model = build_model(network)
-        
+    
+    time_callback = TimeHistory()        
     net_model.fit(train_net, train_targets, 
                   validation_data=(valid_net, valid_targets),
-                  epochs=nepochs, batch_size=20, callbacks=[checkpointer], verbose=1)
+                  epochs=nepochs, batch_size=20, callbacks=[checkpointer, time_callback], verbose=1)
+
+    mn = np.mean(time_callback.durations)
+    sd = np.std(time_callback.durations, ddof=1)
     
     net_model.load_weights(saved_weights_path)
     net_predictions = [np.argmax(net_model.predict(np.expand_dims(feature, axis=0))) for feature in test_net]
@@ -219,4 +243,5 @@ def train(nepochs=10, network='Resnet50'):
     print("[INFO] Upload %s to %s" % (saved_weights_path, dest_dir))    
     dutils.rclone_copy(saved_weights_path, dest_dir)
 
-    return mutils.format_train(network, test_accuracy, nepochs, data_size)
+    return mutils.format_train(network, test_accuracy, nepochs, 
+                               data_size, time_prepare, mn, std)
