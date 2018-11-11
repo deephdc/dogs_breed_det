@@ -36,7 +36,7 @@ def rclone_call(src_path, dest_dir, cmd = 'copy', get_output=False):
     output, error = result.communicate()
     return output, error
 
-def rclone_copy(src_path, dest_dir, src_type='file'):
+def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
     """ Function for rclone call to copy data (sync?)
     :param src_path: full path to source (file or directory)
     :param dest_dir: full path to destination directory (not file!)
@@ -63,22 +63,22 @@ def rclone_copy(src_path, dest_dir, src_type='file'):
     else:
         # if src_path exists, copy it
         output, error = rclone_call(src_path, dest_dir, cmd='copy')
-        if not error:
-            # compare two directories, if copied file appears in output
-            # as not found or not matching -> Error
-            print('[INFO] File %s copied. Check if (src) and (dest) really match..' % (dest_file))
-            output, error = rclone_call(src_dir, dest_dir, cmd='check')
-            if 'ERROR : ' + dest_file in error:
-                print('[ERROR] %s (src) and %s (dest) do not match!' % (src_path, dest_path))
-                error_out = 'Copy failed: ' + src_path + ' (src) and ' + \
-                             dest_path + ' (dest) do not match'
-                dest_exist = False
-            else:
-                output, error = rclone_call(dest_path, dest_dir, 
-                                            cmd='ls', get_output = True)
-                file_size = [ elem for elem in output.split(' ') if elem.isdigit() ][0]
-                print('[INFO] Checked: Successfully copied to %s %s bytes' % (dest_path, file_size))
-                dest_exist = True
+        if not error:       
+            output, error = rclone_call(dest_path, dest_dir, 
+                                        cmd='ls', get_output = True)
+            file_size = [ elem for elem in output.split(' ') if elem.isdigit() ][0]
+            print('[INFO] Copied to %s %s bytes' % (dest_path, file_size))
+            dest_exist = True
+            if verbose:
+                # compare two directories, if copied file appears in output
+                # as not found or not matching -> Error
+                print('[INFO] File %s copied. Check if (src) and (dest) really match..' % (dest_file))
+                output, error = rclone_call(src_dir, dest_dir, cmd='check')
+                if 'ERROR : ' + dest_file in error:
+                    print('[ERROR] %s (src) and %s (dest) do not match!' % (src_path, dest_path))
+                    error_out = 'Copy failed: ' + src_path + ' (src) and ' + \
+                                 dest_path + ' (dest) do not match'
+                    dest_exist = False            
         else:
             print('[ERROR] %s (src):\n%s' % (dest_path, error))
             error_out = error
@@ -157,21 +157,56 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
             data_zip.close()
 
 # define function to load train, test, and validation datasets
-def load_dataset(path):
+def build_targets(data_type):
     """
-    Function to load train / validation / test datasets
+    Function to create train / validation / test one-hot encoded targets
     :param path: path to dataset images
-    :return: numpy array containing file paths to images, numpy array containing onehot-encoded classification labels
+    :return: numpy array containing onehot-encoded classification labels
     """
-    data = load_files(path)
-    dog_files = np.array(data['filenames'])
+    data_dir = os.path.join(cfg.BASE_DIR, 'data', cfg.Dog_DataDir, data_type)
+    data = load_files(data_dir)
     dog_targets = np_utils.to_categorical(np.array(data['target']), 133)
-    return dog_files, dog_targets
+    targets_file = 'Dogs_targets_' + data_type + '.npz'
+    targets_path = os.path.join(cfg.BASE_DIR, 'data', targets_file) 
+    
+    if data_type == 'train':
+        np.savez(targets_path, train=dog_targets)
+    elif data_type == 'test':
+        np.savez(targets_path, test=dog_targets)
+    elif data_type == 'valid':
+        np.savez(targets_path, valid=dog_targets)
+    else:
+        np.savez(targets_path, features=dog_targets)
+    
+    print("[INFO] Targets file shape (%s): %s" % (data_type, dog_targets.shape) )   
+    
+    return dog_targets
+    
+def load_data_files(path):
+    """
+    Function to load train / validation / test file names
+    :param path: path to dataset images
+    :return: numpy array containing file paths to images
+    """    
+    data = load_files(path)
+    data_files = np.array(data['filenames'])
+    return data_files
+
+def load_targets(data_type):
+    """Load features from the file
+       Only one dataset, e.g. train, valid, test is loaded
+    """
+    
+    targets_file = 'Dogs_targets_' + data_type + '.npz'
+    targets_path = os.path.join(cfg.BASE_DIR, 'data', targets_file)
+    print("[INFO] Using %s" % targets_path)
+    targets = np.load(targets_path)[data_type]
+
+    return targets
 
 def dog_names_create(dog_names_path):
     """
-    Function to return dog names based on directories in 'train'.
-    Also creates .txt file with the names
+    Function to create dog_names file based on sub-directories in 'train'.
     :return:  list of string-valued dog breed names for translating labels
     """
     dataImagesTrain = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, 'train','*')
@@ -187,23 +222,13 @@ def dog_names_create(dog_names_path):
             
     return dog_names
 
-def dog_names_read(dog_names_path):
+def dog_names_load(dog_names_path):
     """
     Function to return dog names read from the file.
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
-
-    if not os.path.isfile(dog_names_path):
-        print("[WARNING!] File %s doesn't exist. Trying to download.." % (dog_names_path))
-        data_file = dog_names_path.split('/')[-1]
-        status_ok, _ = maybe_download_data(data_dir='/data', data_file=data_file)
-        
-        if not status_ok:
-            print("[WARNING!] File %s wasn't downloaded. Trying to create it.." % (dog_names_path))
-            dog_names = dog_names_create(dog_names_path)
-
-    # we expect that file finally exists
+    # we expect that file already exists
     with open(dog_names_path, 'r') as listfile:
         dog_names = [ line.rstrip('\n') for line in listfile ]
 

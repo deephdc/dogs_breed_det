@@ -2,6 +2,7 @@
 """
    Module to prepare the dataset
 """
+import os
 import logging
 import argparse
 from pathlib2 import Path
@@ -10,17 +11,71 @@ import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.features.build_features as bfeatures
 
+def check_targets(data_type):
+    """Check if targets file exists locally
+       Only one dataset, e.g. train, valid, test is checked
+    """
+    data_dir = '/data'
+    targets_file = 'Dogs_targets_' + data_type + '.npz'
+    targets_path = os.path.join(cfg.BASE_DIR, 'data', targets_file)
+    targets_exists, _ = dutils.maybe_download_data(
+                                    data_dir=data_dir,
+                                    data_file = targets_file)        
+
+    if not targets_exists:
+        print("[INFO] %s was neither found nor downloaded. Trying to build .. " 
+              % targets_file)
+
+        # check if directory with train, test, and valid images exists:
+        dutils.maybe_download_and_unzip()
+        dutils.build_targets(data_type)
+        
+        # Upload to nextcloud newly created file
+        targets_exists = True if os.path.exists(targets_path) else False
+        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + data_dir
+        print("[INFO] Upload %s to %s" % (targets_path, dest_dir))        
+        dutils.rclone_copy(targets_path, dest_dir)
+        
+    return targets_exists
+
+def check_features(data_type, network = 'Resnet50'):
+    """Check if features file exists locally
+       Only one dataset, e.g. train, valid, test is checked
+    """
+    data_dir = bfeatures.set_features_file(data_type, network, return_type='dir')
+    bottleneck_file =  bfeatures.set_features_file(data_type, network, return_type='file')
+    bottleneck_path = bfeatures.set_features_file(data_type, network)
+    bottleneck_exists, _ = dutils.maybe_download_data(
+                                    data_dir=data_dir,
+                                    data_file = bottleneck_file)        
+
+    if not bottleneck_exists:
+        print("[INFO] %s was neither found nor downloaded. Trying to build. It may take time .. " 
+              % bottleneck_file)
+
+        # check if directory with train, test, and valid images exists:
+        dutils.maybe_download_and_unzip()
+        bfeatures.build_features(data_type, network)
+        
+        # Upload to nextcloud newly created file
+        bottleneck_exists = True if os.path.exists(bottleneck_path) else False
+        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + data_dir
+        print("[INFO] Upload %s to %s" % (bottleneck_path, dest_dir))        
+        dutils.rclone_copy(bottleneck_path, dest_dir)
+        
+    return bottleneck_exists
+
 def prepare_data(network='Resnet50'):
     """ Function to prepare data
     """
-    
+   
     # check if dog_names file exists locally, if not -> download,
     # if not downloaded -> dutils.dog_names_create()
-    labels_file = cfg.Dog_LabelsFile.split('/')[-1]
-    status_labels, _ = dutils.maybe_download_data(data_dir='/data', 
-                                                  data_file=labels_file)
+    dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
+    status_dog_names, _ = dutils.maybe_download_data(data_dir='/data', 
+                                                     data_file=dog_names_file)
 
-    if not status_labels:
+    if not status_dog_names:
         dutils.dog_names_create()
     else:
         print("[INFO] %s exists" % (cfg.Dog_LabelsFile))
@@ -29,14 +84,15 @@ def prepare_data(network='Resnet50'):
     # if not -> download it, if not downloaded -> try to build
     # train
     status = { True: "exists", False: "does not exist"}
-    status_train = bfeatures.check_features_set('train', network)
-    print("[INFO] Bottleneck file for train (%s) %s" % (network, status[status_train]))
-    # valid
-    status_valid = bfeatures.check_features_set('valid', network)
-    print("[INFO] Bottleneck file for valid (%s) %s" % (network, status[status_valid]))
-    # test
-    status_test = bfeatures.check_features_set('test', network)
-    print("[INFO] Bottleneck file for tests (%s) %s" % (network, status[status_test]))
+    datasets = ['train', 'valid', 'test']
+    for dset in datasets:
+        status_targets = check_targets(dset)
+        print("[INFO] Targets file for %s %s" % 
+               (dset, status[status_targets]))        
+        status_bottleneck = check_features(dset, network)
+        print("[INFO] Bottleneck file for %s (%s) %s" % 
+               (dset, network, status[status_bottleneck]))
+
 
 def main():
     """ Runs data processing scripts to turn raw data from (../raw) into

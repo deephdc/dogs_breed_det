@@ -9,7 +9,6 @@ import os
 import tempfile
 import numpy as np
 import pkg_resources
-import werkzeug.exceptions as exceptions
 import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
@@ -19,6 +18,9 @@ from keras.layers import Dense, GlobalAveragePooling2D
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
 from keras import backend
+
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 
 
 def get_metadata():
@@ -60,7 +62,7 @@ def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
     
-    train_net = bfeatures.load_features_set('train', network)
+    train_net = bfeatures.load_features('train', network)
 
     net_model = Sequential()
     net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
@@ -93,30 +95,42 @@ def predict_file(img_path, network='Resnet50'):
     # clear possible pre-existing sessions. IMPORTANT!
     backend.clear_session()
     
-    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
-                                      'weights.best.' + network + '.hdf5')
-                                      
-    net_model = build_model(network)
-    net_model.load_weights(saved_weights_path)
+    # check that all necessary data is there
+    prepare_data(network)
     
-    # extract bottleneck features
-    bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
-    print("[INFO] Bottleneck feature size:", bottleneck_feature.shape)
-    dog_names  = dutils.dog_names_read(cfg.Dog_LabelsFile)    
-    # obtain predicted vector
-    predicted_vector = net_model.predict(bottleneck_feature)
-    print("[INFO] Sum:", np.sum(predicted_vector))
-    # return dog breed that is predicted by the model
-    idxs = np.argsort(predicted_vector[0])[::-1][:5] 
-    #dog_names_best = [ dog_names[i] for i in idxs ]
-    dog_names_best = []
-    probs_best = []
-    for i in idxs:
-        dog_names_best.append(dog_names[i])
-        probs_best.append(predicted_vector[0][i])
-        print(dog_names[i], " : ", predicted_vector[0][i]) 
+    weights_file = 'weights.best.' + network + '.hdf5'
+    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file) 
+    
+    # check if the weights file exists locally. if not -> try to download
+    status_weights, _ = dutils.maybe_download_data(data_dir='/models', 
+                                                   data_file = weights_file)
+                                      
+    if status_weights:
+        net_model = build_model(network)
+        net_model.load_weights(saved_weights_path)
+    
+        # extract bottleneck features
+        bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
+        print("[INFO] Bottleneck feature size:", bottleneck_feature.shape)
+        dog_names  = dutils.dog_names_load(cfg.Dog_LabelsFile)    
+        # obtain predicted vector
+        predicted_vector = net_model.predict(bottleneck_feature)
+        print("[INFO] Sum:", np.sum(predicted_vector))
+        # return dog breed that is predicted by the model
+        idxs = np.argsort(predicted_vector[0])[::-1][:5] 
+        #dog_names_best = [ dog_names[i] for i in idxs ]
+        dog_names_best = []
+        probs_best = []
+        for i in idxs:
+            dog_names_best.append(dog_names[i])
+            probs_best.append(predicted_vector[0][i])
+            print(dog_names[i], " : ", predicted_vector[0][i]) 
 
-    return mutils.format_prediction(dog_names_best, probs_best)
+        msg = mutils.format_prediction(dog_names_best, probs_best)
+    else:
+        msg = "[ERROR] No weights file found! Please first train the model " + \
+              "with the " + network +  " network!"
+    return msg
 
 
 def predict_data(img, network='Resnet50'):
@@ -154,15 +168,16 @@ def train(nepochs=10, network='Resnet50'):
     """
     Train network (transfer learning)
     """
+    # check that all necessary data is there
+    prepare_data(network)
     
-    Dog_ImagesDir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir)
-    train_files, train_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'train'))
-    valid_files, valid_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'valid'))
-    test_files, test_targets = dutils.load_dataset(os.path.join(Dog_ImagesDir,'test'))
+    train_targets = dutils.load_targets('train')
+    valid_targets = dutils.load_targets('valid')
+    test_targets = dutils.load_targets('test')
     
-    train_net = bfeatures.load_features_set('train', network)
-    valid_net = bfeatures.load_features_set('valid', network)
-    test_net = bfeatures.load_features_set('test', network)
+    train_net = bfeatures.load_features('train', network)
+    valid_net = bfeatures.load_features('valid', network)
+    test_net = bfeatures.load_features('test', network)
     
     print('[INFO] Sizes of bottleneck_features (train, valid, test):')
     print(train_net.shape, valid_net.shape, test_net.shape)
@@ -191,6 +206,13 @@ def train(nepochs=10, network='Resnet50'):
     # report test accuracy
     test_accuracy = 100.*np.sum(np.array(net_predictions)==np.argmax(test_targets, axis=1))/float(len(net_predictions))
     print('[INFO] Test accuracy: %.4f%%' % test_accuracy)
+    
+    # generate a classification report for the model
+    print("[INFO] Classification Report:")
+    print(classification_report(np.argmax(test_targets, axis=1), net_predictions))
+    # compute the raw accuracy with extra precision
+    acc = accuracy_score(np.argmax(test_targets, axis=1), net_predictions)
+    print("[INFO] score: {}".format(acc))
     
     # copy trained weights back to nextcloud
     dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/models'

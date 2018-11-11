@@ -24,7 +24,7 @@ def set_features_file(dataset_type, network = 'Resnet50', return_type = 'path'):
     else:
         return file_path
 
-def build_features_set(dataset_type, network = 'Resnet50'):
+def build_features(data_type, network = 'Resnet50'):
     """Build bottleneck_features for set of files"""
 
     nets = {'VGG16': extract_VGG16,
@@ -33,22 +33,19 @@ def build_features_set(dataset_type, network = 'Resnet50'):
             'InceptionV3': extract_InceptionV3,
             'Xception': extract_Xception,
     }
-
-    # check if directory with train, test, and valid images exist:
-    dutils.maybe_download_and_unzip()
     
-    data_dir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, dataset_type)
-    img_files, targets = dutils.load_dataset(data_dir)
+    data_dir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, data_type)
+    img_files = dutils.load_data_files(data_dir)
       
     bottleneck_features = nets[network](dutils.paths_to_tensor(img_files))
-    bottleneck_path = set_features_file(dataset_type, network,
+    bottleneck_path = set_features_file(data_type, network,
                                         return_type='path')
 
-    if dataset_type == 'train':
+    if data_type == 'train':
         np.savez(bottleneck_path, train=bottleneck_features)
-    elif dataset_type == 'test':
+    elif data_type == 'test':
         np.savez(bottleneck_path, test=bottleneck_features)
-    elif dataset_type == 'valid':
+    elif data_type == 'valid':
         np.savez(bottleneck_path, valid=bottleneck_features)
     else:
         np.savez(bottleneck_path, features=bottleneck_features)
@@ -57,32 +54,8 @@ def build_features_set(dataset_type, network = 'Resnet50'):
     
     return bottleneck_features
 
-def check_features_set(data_type, network = 'Resnet50'):
-    """Check if features file exists locally
-       Only one dataset, e.g. train, valid, test is checked
-    """
-    data_dir = set_features_file(data_type, network, return_type='dir')
-    bottleneck_file =  set_features_file(data_type, network, return_type='file')
-    bottleneck_exists, _ = dutils.maybe_download_data(
-                                    data_dir=data_dir,
-                                    data_file = bottleneck_file)        
 
-    if not bottleneck_exists:
-        print("[INFO] %s was neither found nor downloaded. Trying to build. It may take time .. " 
-              % bottleneck_file)
-
-        build_features_set(data_type, network)
-        
-        # Upload to nextcloud newly created file
-        bottleneck_path = set_features_file(data_type, network)
-        bottleneck_exists = True if os.path.exists(bottleneck_path) else False
-        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + data_dir
-        print("[INFO] Upload %s to %s" % (bottleneck_path, dest_dir))        
-        dutils.rclone_copy(bottleneck_path, dest_dir)
-        
-    return bottleneck_exists
-
-def load_features_set(data_type, network = 'Resnet50'):
+def load_features(data_type, network = 'Resnet50'):
     """Load features from the file
        Only one dataset, e.g. train, valid, test is loaded
     """
