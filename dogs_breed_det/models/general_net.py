@@ -222,7 +222,7 @@ def train(nepochs=10, network='Resnet50'):
                   epochs=nepochs, batch_size=20, callbacks=[checkpointer, time_callback], verbose=1)
 
     mn = np.mean(time_callback.durations)
-    sd = np.std(time_callback.durations, ddof=1)
+    std = np.std(time_callback.durations, ddof=1)
     
     net_model.load_weights(saved_weights_path)
     net_predictions = [np.argmax(net_model.predict(np.expand_dims(feature, axis=0))) for feature in test_net]
