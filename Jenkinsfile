@@ -17,12 +17,12 @@ pipeline {
     }
 
     stages {
-        stage('Fetch the repository') {
+        stage('Code fetching') {
             steps {
                 checkout scm
             }
         }
-	
+
         stage('Style analysis: PEP8') {
             steps {
                 ToxEnvRun('pep8')
@@ -41,6 +41,22 @@ pipeline {
             post {
                 always {
                     WarningsReport('Pylint')
+                }
+            }
+        }
+
+        stage('Security scanner') {
+            steps {
+                ToxEnvRun('bandit-report')
+                script {
+                    if (currentBuild.result == 'FAILURE') {
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
+            }
+            post {
+                always {
+                    HTMLReport("/tmp/bandit", 'index.html', 'Bandit report')
                 }
             }
         }
