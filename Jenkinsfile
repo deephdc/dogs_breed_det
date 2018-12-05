@@ -34,16 +34,16 @@ pipeline {
 //            }
 //        }
 
-        stage('Style analysis: Pylint') {
-            steps {
-                ToxEnvRun('pylint')
-            }
-            post {
-                always {
-                    WarningsReport('Pylint')
-                }
-            }
-        }
+//        stage('Style analysis: Pylint') {
+//            steps {
+//                ToxEnvRun('pylint')
+//            }
+//            post {
+//                always {
+//                    WarningsReport('Pylint')
+//                }
+//            }
+//        }
 
         stage('Security scanner') {
             steps {
