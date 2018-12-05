@@ -1,2 +1,3 @@
 flake8
 pylint
+tensorflow>=1.6.0
