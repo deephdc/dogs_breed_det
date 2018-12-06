@@ -11,7 +11,7 @@ pipeline {
         author_name = "V.Kozlov (KIT)"
         author_email = "valentin.kozlov@kit.edu"
         app_name = "dogs_breed_det"
-        job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det"
+        job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/master"
         job_result_url = ''
     }
 
