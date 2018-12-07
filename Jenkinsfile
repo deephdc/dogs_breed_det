@@ -66,7 +66,6 @@ pipeline {
                 script {
                     def job_result = JenkinsBuildJob("${env.job_location}")
                     job_result_url = job_result.absoluteUrl
-                    echo "${job_result_url}"
                 }
             }
         }
@@ -93,7 +92,7 @@ pipeline {
                             output at:\n\n\t${env.BUILD_URL}/console\n\n\
                             and resultant Docker image rebuilding job at:\
                             \n\n\t${job_result_url}\n\nDEEP Jenkins CI\
-                            service""".stripIndent()
+                            service""".replaceAll("\\s"," ")
                 EmailSend(subject, body, "${author_email}")
             }
         }
