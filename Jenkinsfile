@@ -45,21 +45,21 @@ pipeline {
 //            }
 //        }
 
-//        stage('Security scanner') {
-//            steps {
-//                ToxEnvRun('bandit-report')
-//                script {
-//                    if (currentBuild.result == 'FAILURE') {
-//                        currentBuild.result = 'UNSTABLE'
-//                    }
-//               }
-//            }
-//            post {
-//                always {
-//                    HTMLReport("/tmp/bandit", 'index.html', 'Bandit report')
-//                }
-//            }
-//        }
+        stage('Security scanner') {
+            steps {
+                ToxEnvRun('bandit-report')
+                script {
+                    if (currentBuild.result == 'FAILURE') {
+                        currentBuild.result = 'UNSTABLE'
+                    }
+               }
+            }
+            post {
+               always {
+                    HTMLReport("/tmp/bandit", 'index.html', 'Bandit report')
+                }
+            }
+        }
 
         stage("Re-build DEEP-OC-dogs_breed_det Docker image") {
             steps {
@@ -93,7 +93,7 @@ pipeline {
                             output at:\n\n\t${env.BUILD_URL}/console\n\n\
                             and resultant Docker image rebuilding job at:\
                             \n\n\t${job_result_url}\n\nDEEP Jenkins CI\
-                            service"""
+                            service""".stripIndent()
                 EmailSend(subject, body, "${author_email}")
             }
         }
