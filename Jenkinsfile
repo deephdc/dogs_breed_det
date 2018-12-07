@@ -64,29 +64,35 @@ pipeline {
             steps {
                 script {
                     def job_result = JenkinsBuildJob("${env.job_location}")
-                    def job_result_url = job_result.absoluteUrl
+                    env.job_result_url = job_result.absoluteUrl
                 }
             }
         }
+    }
 
-        stage("Email notification") {
-            steps {
-                script {
-                    def build_status =  currentBuild.result
-                    build_status =  build_status ?: 'SUCCESS'
-                    def subject = "New ${app_name} build in Jenkins@DEEP:\
-                                   ${build_status}: Job '${env.JOB_NAME}\
-                                   [${env.BUILD_NUMBER}]'"
-                    def body = "Dear ${author_name},\nA new build of\
-                                '${app_name}' DEEP application is available in\
-                                Jenkins at:\n\n\t${env.BUILD_URL}\n\nterminated\
-                                with '${build_status}' status.\n\nCheck console\
-                                output at:\n\n\t${env.BUILD_URL}/console\n\n\
-                                and resultant Docker image rebuilding job at:\
-                                \n\n\t${job_result_url}\n\nDEEP Jenkins CI\
-                                service"
-                    EmailSend(subject, body, "${author_email}")
-                }
+    post {
+        failure {
+            script {
+                currentBuild.result = 'FAILURE'
+            }
+        }
+
+        always  {
+            script { //stage("Email notification")
+                def build_status =  currentBuild.result
+                build_status =  build_status ?: 'SUCCESS'
+                def subject = "New ${app_name} build in Jenkins@DEEP:\
+                               ${build_status}: Job '${env.JOB_NAME}\
+                               [${env.BUILD_NUMBER}]'"
+                def body = "Dear ${author_name},\nA new build of\
+                           '${app_name}' DEEP application is available in\
+                            Jenkins at:\n\n\t${env.BUILD_URL}\n\nterminated\
+                            with '${build_status}' status.\n\nCheck console\
+                            output at:\n\n\t${env.BUILD_URL}/console\n\n\
+                            and resultant Docker image rebuilding job at:\
+                            \n\n\t${job_result_url}\n\nDEEP Jenkins CI\
+                            service"
+                EmailSend(subject, body, "${author_email}")
             }
         }
     }
