@@ -2,7 +2,7 @@
 
 @Library(['github.com/indigo-dc/jenkins-pipeline-library']) _
 
-//def job_result_url = ''
+def job_result_url = ''
 
 pipeline {
     agent {
@@ -14,7 +14,6 @@ pipeline {
         author_email = "valentin.kozlov@kit.edu"
         app_name = "dogs_breed_det"
         job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/master"
-        job_result_url = ""
     }
 
     stages {
@@ -66,8 +65,8 @@ pipeline {
             steps {
                 script {
                     def job_result = JenkinsBuildJob("${env.job_location}")
-                    env.job_result_url = job_result.absoluteUrl
-                    echo "${env.job_result_url}"
+                    job_result_url = job_result.absoluteUrl
+                    echo "${job_result_url}"
                 }
             }
         }
@@ -84,17 +83,17 @@ pipeline {
             script { //stage("Email notification")
                 def build_status =  currentBuild.result
                 build_status =  build_status ?: 'SUCCESS'
-                def subject = "New ${app_name} build in Jenkins@DEEP:\
+                def subject = """New ${app_name} build in Jenkins@DEEP:\
                                ${build_status}: Job '${env.JOB_NAME}\
-                               [${env.BUILD_NUMBER}]'"
-                def body = "Dear ${author_name},\nA new build of\
+                               [${env.BUILD_NUMBER}]'"""
+                def body = """Dear ${author_name},\nA new build of\
                            '${app_name}' DEEP application is available in\
                             Jenkins at:\n\n\t${env.BUILD_URL}\n\nterminated\
                             with '${build_status}' status.\n\nCheck console\
                             output at:\n\n\t${env.BUILD_URL}/console\n\n\
                             and resultant Docker image rebuilding job at:\
-                            \n\n\t${env.job_result_url}\n\nDEEP Jenkins CI\
-                            service"
+                            \n\n\t${job_result_url}\n\nDEEP Jenkins CI\
+                            service"""
                 EmailSend(subject, body, "${author_email}")
             }
         }
