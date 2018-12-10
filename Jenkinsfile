@@ -85,16 +85,18 @@ pipeline {
                 def subject = """New ${app_name} build in Jenkins@DEEP:\
                                ${build_status}: Job '${env.JOB_NAME}\
                                [${env.BUILD_NUMBER}]'"""
-                def body = "Dear ${author_name},\n"
-                         + "A new build of '${app_name}'"
-                         + "DEEP application is available in Jenkins at:\n\n"
-                         + "\t${env.BUILD_URL}\n\n"
-                         + "terminated with '${build_status}' status.\n\n"
-                         + "Check console output at:\n\n"
-                         + "\t${env.BUILD_URL}/console\n\n"
-                         + "and resultant Docker image rebuilding job at:\n\n"
-                         + "\t${job_result_url}\n\n"
-                         + "DEEP Jenkins CI service"
+
+                def body = """
+Dear ${author_name},
+A new build of '${app_name} DEEP application is available in Jenkins at:\n\n
+\t${env.BUILD_URL}\n\n
+terminated with '${build_status}' status.\n\n
+Check console output at:\n\n
+\t${env.BUILD_URL}/console\n\n
+and resultant Docker image rebuilding job at:\n\n
+\t${job_result_url}\n\n
+DEEP Jenkins CI service"""
+
                 EmailSend(subject, body, "${author_email}")
             }
         }
