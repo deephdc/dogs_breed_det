@@ -23,16 +23,16 @@ pipeline {
             }
         }
 
-//        stage('Style analysis: PEP8') {
-//            steps {
-//                ToxEnvRun('pep8')
-//            }
-//            post {
-//                always {
-//                    WarningsReport('Pep8')
-//                }
-//            }
-//        }
+        stage('Style analysis: PEP8') {
+            steps {
+                ToxEnvRun('pep8')
+            }
+            post {
+                always {
+                    WarningsReport('Pep8')
+                }
+            }
+        }
 
 //        stage('Style analysis: Pylint') {
 //            steps {
