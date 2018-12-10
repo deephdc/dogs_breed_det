@@ -89,12 +89,12 @@ pipeline {
                 def body = """
 Dear ${author_name},\n\n
 A new build of '${app_name} DEEP application is available in Jenkins at:\n\n
- *  ${env.BUILD_URL}\n\n
+*  ${env.BUILD_URL}\n\n
 terminated with '${build_status}' status.\n\n
 Check console output at:\n\n
- *  ${env.BUILD_URL}/console\n\n
+*  ${env.BUILD_URL}/console\n\n
 and resultant Docker image rebuilding job at (may be empty in case of FAILURE):\n\n
- *  ${job_result_url}\n\n
+*  ${job_result_url}\n\n
 DEEP Jenkins CI service"""
 
                 EmailSend(subject, body, "${author_email}")
