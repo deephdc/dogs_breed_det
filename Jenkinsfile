@@ -29,23 +29,19 @@ pipeline {
             }
             post {
                 always {
-                    warnings canComputeNew: false, canResolveRelativePaths: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PYLint', pattern: '**/flake8.log']], unHealthy: ''
-                    //WarningsReport('PYLint') // 'Flake8' fails...
-                    //HTMLReport("/tmp/pep8", 'index.html', 'PEP8 report')
+                    warnings canComputeNew: false,
+                             canResolveRelativePaths: false,
+                             defaultEncoding: '',
+                             excludePattern: '',
+                             healthy: '',
+                             includePattern: '',
+                             messagesPattern: '',
+                             parserConfigurations: [[parserName: 'PYLint', pattern: '**/flake8.log']],
+                             unHealthy: ''
+                    //WarningsReport('PYLint') // 'Flake8' fails..., consoleParsers does not produce any report...
                 }
             }
         }
-
-//        stage('Style analysis: Pylint') {
-//            steps {
-//                ToxEnvRun('pylint')
-//            }
-//            post {
-//                always {
-//                    WarningsReport('PyLint')
-//                }
-//            }
-//        }
 
         stage('Security scanner') {
             steps {
