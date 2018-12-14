@@ -29,7 +29,7 @@ pipeline {
             }
             post {
                 always {
-                    warnings canComputeNew: false, canResolveRelativePaths: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PYLint', pattern: '**/flake8.log']], unHealthy: ''
+                    warnings canComputeNew: false, canResolveRelativePaths: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PYLint', pattern: 'flake8.log']], unHealthy: ''
                     //WarningsReport('Flake8') // fails...
                     //HTMLReport("/tmp/pep8", 'index.html', 'PEP8 report')
                 }
