@@ -74,13 +74,16 @@ def prepare_data(network='Resnet50'):
     mdata.prepare_data(network)
     
 
-def build_model(network='Resnet50', nclasses=cfg.Dog_LabelsNum):
+def build_model(network='Resnet50'):
     """
     Build network. Possible nets:
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
     
     train_net = bfeatures.load_features('train', network)
+    dog_names = dutils.dog_names_load()
+    nclasses = len(dog_names)
+    print('[INFO] Found %d classes (dogs breeds)' % nclasses)
 
     net_model = Sequential()
     net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
@@ -130,7 +133,7 @@ def predict_file(img_path, network='Resnet50'):
         # extract bottleneck features
         bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
         print("[INFO] Bottleneck feature size:", bottleneck_feature.shape)
-        dog_names  = dutils.dog_names_load(cfg.Dog_LabelsFile)    
+        dog_names  = dutils.dog_names_load()
         # obtain predicted vector
         predicted_vector = net_model.predict(bottleneck_feature)
         print("[INFO] Sum:", np.sum(predicted_vector))

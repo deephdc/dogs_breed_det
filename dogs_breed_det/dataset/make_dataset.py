@@ -76,11 +76,12 @@ def prepare_data(network='Resnet50'):
                                                      data_file=dog_names_file)
 
     if not status_dog_names:
+        dutils.maybe_download_and_unzip()
         dutils.dog_names_create()
     else:
         print("[INFO] %s exists" % (cfg.Dog_LabelsFile))
                                                         
-    # check if bottleneck_features file fexists locally
+    # check if bottleneck_features file exists locally
     # if not -> download it, if not downloaded -> try to build
     # train
     status = { True: "exists", False: "does not exist"}

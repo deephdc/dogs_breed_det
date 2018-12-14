@@ -132,7 +132,7 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
     """
 
     data_dir = data_dir.lstrip('/')
-    # for now we assume that everything gets unzipped in ~/data directory
+    # for now we assume that everything will be unzipped in ~/data directory
     unzip_dir = os.path.join(cfg.BASE_DIR, 'data')
   
     # remove last extension, should be .zip
@@ -165,7 +165,9 @@ def build_targets(data_type):
     """
     data_dir = os.path.join(cfg.BASE_DIR, 'data', cfg.Dog_DataDir, data_type)
     data = load_files(data_dir)
-    dog_targets = np_utils.to_categorical(np.array(data['target']), 133)
+    # get number of classes for one-hot encoding
+    nclasses = len(dog_names_load()) # expect that cfg.Dog_LabelsFile exists
+    dog_targets = np_utils.to_categorical(np.array(data['target']), nclasses)
     targets_file = 'Dogs_targets_' + data_type + '.npz'
     targets_path = os.path.join(cfg.BASE_DIR, 'data', targets_file) 
     
@@ -204,7 +206,7 @@ def load_targets(data_type):
 
     return targets
 
-def dog_names_create(dog_names_path):
+def dog_names_create():
     """
     Function to create dog_names file based on sub-directories in 'train'.
     :return:  list of string-valued dog breed names for translating labels
@@ -212,24 +214,27 @@ def dog_names_create(dog_names_path):
     dataImagesTrain = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, 'train','*')
     dog_names = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
 
-    with open(dog_names_path, 'w') as listfile:
+    print('[INFO] Creating %s file with %d classes (dogs breeds)' % 
+          (cfg.Dog_LabelsFile, len(dog_names)))
+
+    with open(cfg.Dog_LabelsFile, 'w') as listfile:
         for item in dog_names:
             listfile.write("%s\n" % item)
-       
+    
     dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/data'
-    print("[INFO] Upload %s to %s" % (dog_names_path, dest_dir))
-    rclone_copy(dog_names_path, dest_dir)
+    print("[INFO] Upload %s to %s" % (cfg.Dog_LabelsFile, dest_dir))
+    rclone_copy(cfg.Dog_LabelsFile, dest_dir)
             
     return dog_names
 
-def dog_names_load(dog_names_path):
+def dog_names_load():
     """
     Function to return dog names read from the file.
     Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
     # we expect that file already exists
-    with open(dog_names_path, 'r') as listfile:
+    with open(cfg.Dog_LabelsFile, 'r') as listfile:
         dog_names = [ line.rstrip('\n') for line in listfile ]
 
     return dog_names

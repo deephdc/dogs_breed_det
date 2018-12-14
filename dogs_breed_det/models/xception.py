@@ -24,7 +24,7 @@ def build_model():
     """
     Simple call to Xception:
     """  
-    return gennet.build_model('Xception', cfg.Dog_LabelsNum)
+    return gennet.build_model('Xception')
         
 
 def predict_file(img_path):

@@ -24,7 +24,7 @@ def build_model():
     """
     Simple call to Resnet50:
     """  
-    return gennet.build_model('Resnet50', cfg.Dog_LabelsNum)
+    return gennet.build_model('Resnet50')
         
 
 def predict_file(img_path):

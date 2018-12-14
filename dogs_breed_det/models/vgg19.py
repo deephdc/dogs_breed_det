@@ -23,7 +23,7 @@ def build_model():
     """
     Simple call to VGG19:
     """  
-    return gennet.build_model('VGG19', cfg.Dog_LabelsNum)
+    return gennet.build_model('VGG19')
         
 
 def predict_file(img_path):
