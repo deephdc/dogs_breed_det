@@ -1,6 +1,8 @@
 Dog's breed detector
 ==============================
 
+[![Build Status](https://jenkins.indigo-datacloud.eu:8080/buildStatus/icon?job=Pipeline-as-code/DEEP-OC-org/dogs_breed_det/master)](https://jenkins.indigo-datacloud.eu:8080/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master/)
+
 A toy example to identify Dog's breed, "Dogs breed detector", as example for [DEEPaaS API](https://github.com/indigo-dc/DEEPaaS).
 
 Dogs breed detector is originally forked from [udacity/dogs-project](https://github.com/udacity/dog-project), dataset comes from [dog dataset](https://s3-us-west-1.amazonaws.com/udacity-aind/dog-project/dogImages.zip).
@@ -25,7 +27,7 @@ Project Organization
     ├── models                 <- Trained and serialized models, model predictions, or model summaries
     │
     ├── notebooks              <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                             the creator's initials (if many user development), 
+    │                             the creator's initials (if many user development),
     │                             and a short `_` delimited description, e.g.
     │                             `1.0-jqp-initial_data_exploration.ipynb`.
     │
@@ -37,7 +39,7 @@ Project Organization
     ├── requirements-dev.txt   <- The requirements file for the development environment
     │
     ├── requirements-test.txt  <- The requirements file for the test environment
-    │    
+    │
     ├── requirements.txt       <- The requirements file for reproducing the analysis environment, e.g.
     │                             generated with `pip freeze > requirements.txt`
     ├── setup.cfg              <- makes project pip installable (pip install -e .) so dogs_breed_det can be imported
@@ -53,10 +55,10 @@ Project Organization
     │   │   │                 predictions
     │   │   └── general_net.py <- General, or parameterized, neural network model description.
     │   │   └── inceptionV3.py <- InceptionV3 model, calls general_net functions to use InceptionV3.
-    │   │   └── resnet50.py    <- Resnet50 model, calls general_net functions to use Resnet50.  
+    │   │   └── resnet50.py    <- Resnet50 model, calls general_net functions to use Resnet50.
     │   │   └── vgg16.py       <- VGG16 model, calls general_net functions to use VGG16.
-    │   │   └── vgg19.py       <- VGG19 model, calls general_net functions to use VGG19.  
-    │   │   └── xception.py    <- Xception model, calls general_net functions to use Xception.      
+    │   │   └── vgg19.py       <- VGG19 model, calls general_net functions to use VGG19.
+    │   │   └── xception.py    <- Xception model, calls general_net functions to use Xception.
     │   │
     │   └── tests              <- Scripts to perfrom code testing + pylint script
     │   │
