@@ -80,9 +80,10 @@ pipeline {
             script { //stage("Email notification")
                 def build_status =  currentBuild.result
                 build_status =  build_status ?: 'SUCCESS'
-                def subject = """New ${app_name} build in Jenkins@DEEP:\
-                               ${build_status}: Job '${env.JOB_NAME}\
-                               [${env.BUILD_NUMBER}]'"""
+                def subject = """
+New ${app_name} build in Jenkins@DEEP:\
+${build_status}: Job '${env.JOB_NAME}\
+[${env.BUILD_NUMBER}]'"""
 
                 def body = """
 Dear ${author_name},\n\n
