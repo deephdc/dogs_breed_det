@@ -29,7 +29,8 @@ pipeline {
             }
             post {
                 always {
-                    WarningsReport('Pep8')
+                    //WarningsReport('Pep8')
+                    HTMLReport("/tmp/pep8", 'index.html', 'PEP8 report')
                 }
             }
         }
