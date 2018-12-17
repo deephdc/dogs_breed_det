@@ -4,7 +4,7 @@ import requests
 def format_prediction(labels, probabilities):
     d = {
         "status": "ok",
-         "predictions": [],
+        "predictions": [],
     }
 
     for label, prob in zip(labels, probabilities):
@@ -27,7 +27,7 @@ def image_link(pred_lab):
     Return link to Google images
     """
     base_url = 'https://www.google.es/search?'
-    params = {'tbm':'isch','q':pred_lab}
+    params = {'tbm': 'isch','q': pred_lab}
     link = base_url + requests.compat.urlencode(params)
     return link
 
@@ -41,7 +41,8 @@ def wikipedia_link(pred_lab):
     return link
 
 
-def format_train(network, accuracy, nepochs, data_size, time_prepare, mn_train, std_train):
+def format_train(network, accuracy, nepochs, data_size, 
+                 time_prepare, mn_train, std_train):
     d = {
         "status": "ok",
          "training": [],
@@ -54,9 +55,10 @@ def format_train(network, accuracy, nepochs, data_size, time_prepare, mn_train, 
         "train set (images)": data_size['train'],
         "validation set (images)": data_size['valid'],
         "test set (images)": data_size['test'],
-        "time": { "time to prepare": time_prepare,
-                 "mean per epoch (s)": mn_train,
-                 "std (s)": std_train,
+        "time": {
+                "time to prepare": time_prepare,
+                "mean per epoch (s)": mn_train,
+                "std (s)": std_train,
                 },
     }
 

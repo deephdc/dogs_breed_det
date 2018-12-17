@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import zipfile
 import subprocess
 import numpy as np
@@ -18,7 +17,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###
 
 
-def rclone_call(src_path, dest_dir, cmd = 'copy', get_output=False):
+def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
     """ Function
         rclone calls
     """
@@ -37,6 +36,7 @@ def rclone_call(src_path, dest_dir, cmd = 'copy', get_output=False):
         result = subprocess.Popen(command, stderr=subprocess.PIPE)
     output, error = result.communicate()
     return output, error
+
 
 def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
     """ Function for rclone call to copy data (sync?)
@@ -67,7 +67,7 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
         output, error = rclone_call(src_path, dest_dir, cmd='copy')
         if not error:       
             output, error = rclone_call(dest_path, dest_dir,
-                                        cmd='ls', get_output = True)
+                                        cmd='ls', get_output=True)
             file_size = [ elem for elem in output.split(' ') if elem.isdigit() ][0]
             print('[INFO] Copied to %s %s bytes' % (dest_path, file_size))
             dest_exist = True
@@ -90,9 +90,9 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
     return dest_exist, error_out
 
 
-def maybe_download_data(remote_storage = cfg.Dog_RemoteStorage, 
-                        data_dir = '/models/bottleneck_features',
-                        data_file = 'Resnet50_features_train.npz'):
+def maybe_download_data(remote_storage=cfg.Dog_RemoteStorage, 
+                        data_dir='/models/bottleneck_features',
+                        data_file='Resnet50_features_train.npz'):
     """
     Download data if it does not exist locally.
     :param remote_storage: remote storage where to download from
@@ -129,6 +129,7 @@ def maybe_download_data(remote_storage = cfg.Dog_RemoteStorage,
         
     return status, error_out
 
+
 def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
                              data_dir='/data/raw',
                              data_file='dogImages.zip'):
@@ -149,9 +150,9 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
         print("[INFO] %s does not exist, trying dowload zipped file %s" % 
               (unzip_dir_data, data_file))
         # check if .zip file present in locally
-        status, _ = maybe_download_data(remote_storage = data_storage, 
-                                        data_dir = data_dir, 
-                                        data_file = data_file)
+        status, _ = maybe_download_data(remote_storage=data_storage, 
+                                        data_dir=data_dir, 
+                                        data_file=data_file)
         # if .zip is present locally, de-archive it
         file_path = os.path.join(cfg.BASE_DIR, data_dir, data_file)
         print(file_path)
@@ -159,6 +160,7 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
             data_zip = zipfile.ZipFile(file_path, 'r')
             data_zip.extractall(unzip_dir)
             data_zip.close()
+
 
 # define function to load train, test, and validation datasets
 def build_targets(data_type):
@@ -188,6 +190,7 @@ def build_targets(data_type):
            (data_type, dog_targets.shape) )   
     
     return dog_targets
+
     
 def load_data_files(path):
     """
@@ -198,6 +201,7 @@ def load_data_files(path):
     data = load_files(path)
     data_files = np.array(data['filenames'])
     return data_files
+
 
 def load_targets(data_type):
     """Load features from the file
@@ -210,6 +214,7 @@ def load_targets(data_type):
     targets = np.load(targets_path)[data_type]
 
     return targets
+
 
 def dog_names_create():
     """
@@ -232,6 +237,7 @@ def dog_names_create():
             
     return dog_names
 
+
 def dog_names_load():
     """
     Function to return dog names read from the file.
@@ -253,6 +259,7 @@ def path_to_tensor(img_path):
     # convert 3D tensor to 4D tensor with shape (1, 224, 224, 3)
     # and return 4D tensor
     return np.expand_dims(x, axis=0)
+
 
 def paths_to_tensor(img_paths):
     list_of_tensors = [path_to_tensor(img_path) for img_path in tqdm(img_paths)]

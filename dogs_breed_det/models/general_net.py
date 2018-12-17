@@ -91,7 +91,7 @@ def build_model(network='Resnet50'):
     net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
     net_model.add(Dense(nclasses, activation='softmax'))
 
-    print("__"+network+"__: ")
+    print("__" + network+"__: ")
     net_model.summary()
     net_model.compile(loss='categorical_crossentropy',
                       optimizer='rmsprop',
@@ -108,11 +108,12 @@ def predict_file(img_path, network='Resnet50'):
     :return: most probable dogs breed
     """
 
-    nets = {'VGG16': bfeatures.extract_VGG16,
-            'VGG19': bfeatures.extract_VGG19,
-            'Resnet50': bfeatures.extract_Resnet50,
-            'InceptionV3': bfeatures.extract_InceptionV3,
-            'Xception': bfeatures.extract_Xception,
+    nets = {
+        'VGG16': bfeatures.extract_VGG16,
+        'VGG19': bfeatures.extract_VGG19,
+        'Resnet50': bfeatures.extract_Resnet50,
+        'InceptionV3': bfeatures.extract_InceptionV3,
+        'Xception': bfeatures.extract_Xception,
     }
 
     # clear possible pre-existing sessions. IMPORTANT!
@@ -126,7 +127,7 @@ def predict_file(img_path, network='Resnet50'):
 
     # check if the weights file exists locally. if not -> try to download
     status_weights, _ = dutils.maybe_download_data(data_dir='/models',
-                                                   data_file = weights_file)
+                                                   data_file=weights_file)
 
     if status_weights:
         net_model = build_model(network)
@@ -141,7 +142,7 @@ def predict_file(img_path, network='Resnet50'):
         print("[INFO] Sum:", np.sum(predicted_vector))
         # return dog breed that is predicted by the model
         idxs = np.argsort(predicted_vector[0])[::-1][:5] 
-        #dog_names_best = [ dog_names[i] for i in idxs ]
+        # dog_names_best = [ dog_names[i] for i in idxs ]
         dog_names_best = []
         probs_best = []
         for i in idxs:
@@ -152,7 +153,7 @@ def predict_file(img_path, network='Resnet50'):
         msg = mutils.format_prediction(dog_names_best, probs_best)
     else:
         msg = "[ERROR] No weights file found! Please first train the model " + \
-              "with the " + network +  " network!"
+              "with the " + network + " network!"
     return msg
 
 
@@ -214,7 +215,8 @@ def train(nepochs=10, network='Resnet50'):
 
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
                                      'weights.best.' + network + '.hdf5')
-    checkpointer = ModelCheckpoint(filepath=saved_weights_path, verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=saved_weights_path, 
+                                   verbose=1, save_best_only=True)
 
     # clear possible pre-existing sessions. important!
     backend.clear_session()
