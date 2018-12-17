@@ -13,19 +13,19 @@ import dogs_breed_det.models.general_net as gennet
 def get_metadata():
     """
     Simple call to get_metadata and set name to _Resnet50:
-    """ 
+    """
     meta = gennet.get_metadata()
     meta['Name'] = "Dogs_Resnet50"
 
     return meta
-        
+
 
 def build_model():
     """
     Simple call to Resnet50:
     """  
     return gennet.build_model('Resnet50')
-        
+
 
 def predict_file(img_path):
     """
@@ -46,15 +46,15 @@ def predict_data(img):
 def predict_url(*args):
     """
     Simple call to gennet.predict_url()
-    """    
+    """
 
     return gennet.predict_url(*args)
-        
+
 
 def train(nepochs=10):
     """
     Simple call to gennet.train() using Resnet50
-    """ 
+    """
 
     return gennet.train(nepochs, 'Resnet50')
 
@@ -81,7 +81,7 @@ def main():
         print("Elapsed time:  ", time.time() - start)
     else:
         get_metadata()
-        
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Model parameters')

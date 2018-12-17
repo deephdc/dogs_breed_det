@@ -23,14 +23,16 @@ def rclone_call(src_path, dest_dir, cmd = 'copy', get_output=False):
         rclone calls
     """
     if cmd == 'copy':
-        command = (['rclone', 'copy', '--progress', src_path, dest_dir]) #'--progress', 
+        command = (['rclone', 'copy', '--progress', src_path, dest_dir])
     elif cmd == 'ls':
         command = (['rclone', 'ls', '-L', src_path])
     elif cmd == 'check':
         command = (['rclone', 'check', src_path, dest_dir])
     
     if get_output:
-        result = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.Popen(command, 
+                                  stdout=subprocess.PIPE, 
+                                  stderr=subprocess.PIPE)
     else:
         result = subprocess.Popen(command, stderr=subprocess.PIPE)
     output, error = result.communicate()
@@ -64,7 +66,7 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
         # if src_path exists, copy it
         output, error = rclone_call(src_path, dest_dir, cmd='copy')
         if not error:       
-            output, error = rclone_call(dest_path, dest_dir, 
+            output, error = rclone_call(dest_path, dest_dir,
                                         cmd='ls', get_output = True)
             file_size = [ elem for elem in output.split(' ') if elem.isdigit() ][0]
             print('[INFO] Copied to %s %s bytes' % (dest_path, file_size))
@@ -75,7 +77,8 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
                 print('[INFO] File %s copied. Check if (src) and (dest) really match..' % (dest_file))
                 output, error = rclone_call(src_dir, dest_dir, cmd='check')
                 if 'ERROR : ' + dest_file in error:
-                    print('[ERROR] %s (src) and %s (dest) do not match!' % (src_path, dest_path))
+                    print('[ERROR] %s (src) and %s (dest) do not match!' 
+                          % (src_path, dest_path))
                     error_out = 'Copy failed: ' + src_path + ' (src) and ' + \
                                  dest_path + ' (dest) do not match'
                     dest_exist = False     
@@ -100,7 +103,8 @@ def maybe_download_data(remote_storage = cfg.Dog_RemoteStorage,
     status = False
     error_out = None
 
-    data_dir = data_dir.lstrip('/') #join doesn't work if data_dir starts with '/'!
+    #join doesn't work if data_dir starts with '/'!
+    data_dir = data_dir.lstrip('/')
     data_dir = data_dir.rstrip('/')
 
     local_dir = os.path.join(cfg.BASE_DIR, data_dir)
@@ -180,7 +184,8 @@ def build_targets(data_type):
     else:
         np.savez(targets_path, features=dog_targets)
     
-    print("[INFO] Targets file shape (%s): %s" % (data_type, dog_targets.shape) )   
+    print("[INFO] Targets file shape (%s): %s" % 
+           (data_type, dog_targets.shape) )   
     
     return dog_targets
     
@@ -245,7 +250,8 @@ def path_to_tensor(img_path):
     img = image.load_img(img_path, target_size=(224, 224))
     # convert PIL.Image.Image type to 3D tensor with shape (224, 224, 3)
     x = image.img_to_array(img)
-    # convert 3D tensor to 4D tensor with shape (1, 224, 224, 3) and return 4D tensor
+    # convert 3D tensor to 4D tensor with shape (1, 224, 224, 3)
+    # and return 4D tensor
     return np.expand_dims(x, axis=0)
 
 def paths_to_tensor(img_paths):

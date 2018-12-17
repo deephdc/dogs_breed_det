@@ -6,25 +6,25 @@ Created on Mon Sep  3 21:29:57 2018
 """
 import time
 import argparse
-import dogs_breed_det.config as cfg
 import dogs_breed_det.models.general_net as gennet
 
 
 def get_metadata():
     """
     Simple call to get_metadata and set name to _VGG19:
-    """ 
+    """
     meta = gennet.get_metadata()
     meta['Name'] = "Dogs_VGG19"
 
-    return meta        
+    return meta
+
 
 def build_model():
     """
     Simple call to VGG19:
-    """  
+    """
     return gennet.build_model('VGG19')
-        
+
 
 def predict_file(img_path):
     """
@@ -38,7 +38,7 @@ def predict_file(img_path):
 def predict_data(img):
     """
     Simple call to gennet.predict_data()  using VGG19
-    """    
+    """
     return gennet.predict_data(img, 'VGG19')
 
 
@@ -47,13 +47,14 @@ def predict_url(*args):
     Simple call to gennet.predict_url()
     """    
     return gennet.predict_url(*args)
-        
+
 
 def train(nepochs=10):
     """
     Simple call to gennet.train() using VGG19
-    """ 
+    """
     return gennet.train(nepochs, 'VGG19')
+
 
 # during development it might be practical 
 # to check your code from the command line

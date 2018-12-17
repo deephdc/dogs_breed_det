@@ -6,7 +6,6 @@ Created on Mon Sep  3 21:29:57 2018
 """
 import time
 import argparse
-import dogs_breed_det.config as cfg
 import dogs_breed_det.models.general_net as gennet
 
 
@@ -17,19 +16,20 @@ def get_metadata():
     meta = gennet.get_metadata()
     meta['Name'] = "Dogs_InceptionV3"
 
-    return meta        
+    return meta
+
 
 def build_model():
     """
     Simple call to InceptionV3:
-    """  
+    """
     return gennet.build_model('InceptionV3')
         
 
 def predict_file(img_path):
     """
     Simple call to gennet.predict_file() using InceptionV3
-    :param img_path: image to classify, full path  
+    :param img_path: image to classify, full path
     :return: most probable dogs breed
     """
     return gennet.predict_file(img_path, 'InceptionV3')
@@ -38,22 +38,23 @@ def predict_file(img_path):
 def predict_data(img):
     """
     Simple call to gennet.predict_data()  using InceptionV3
-    """    
+    """
     return gennet.predict_data(img, 'InceptionV3')
 
 
 def predict_url(*args):
     """
     Simple call to gennet.predict_url()
-    """    
+    """
     return gennet.predict_url(*args)
-        
+
 
 def train(nepochs=10):
     """
     Simple call to gennet.train() using InceptionV3
-    """ 
+    """
     return gennet.train(nepochs, 'InceptionV3')
+
 
 # during development it might be practical 
 # to check your code from the command line
@@ -64,7 +65,7 @@ def main():
     """
 
     if args.method == 'get_metadata':
-        get_metadata()       
+        get_metadata()
     elif args.method == 'predict_file':
         predict_file(args.file)
     elif args.method == 'predict_data':
@@ -72,12 +73,12 @@ def main():
     elif args.method == 'predict_url':
         predict_url(args.url)
     elif args.method == 'train':
-        start = time.time() 
+        start = time.time()
         train(args.n_epochs)
         print("Elapsed time:  ", time.time() - start)
     else:
         get_metadata()
-        
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Model parameters')

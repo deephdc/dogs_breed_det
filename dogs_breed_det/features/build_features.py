@@ -5,18 +5,18 @@ import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
 
 
-def set_features_file(dataset_type, network = 'Resnet50', return_type = 'path'):
+def set_features_file(dataset_type, network='Resnet50', return_type='path'):
     """ Function
-        Returns according to the dataset_type and network either 
+        Returns according to the dataset_type and network either
         directory with the file, filename, or full path to the file (default)
     """
     # directory where file is, not the full path!
     file_dir = os.path.join('data', 'bottleneck_features')
     # only file name
-    file_name = 'Dogs_' + network + '_features_' + dataset_type  + '.npz'
+    file_name = 'Dogs_' + network + '_features_' + dataset_type + '.npz'
     # full path to the file
     file_path = os.path.join(cfg.BASE_DIR, file_dir, file_name)
-    
+
     if return_type == 'dir':
         return file_dir
     elif return_type == 'file':
@@ -24,7 +24,7 @@ def set_features_file(dataset_type, network = 'Resnet50', return_type = 'path'):
     else:
         return file_path
 
-def build_features(data_type, network = 'Resnet50'):
+def build_features(data_type, network='Resnet50'):
     """Build bottleneck_features for set of files"""
 
     nets = {'VGG16': extract_VGG16,
@@ -33,10 +33,10 @@ def build_features(data_type, network = 'Resnet50'):
             'InceptionV3': extract_InceptionV3,
             'Xception': extract_Xception,
     }
-    
+
     data_dir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, data_type)
     img_files = dutils.load_data_files(data_dir)
-      
+
     bottleneck_features = nets[network](dutils.paths_to_tensor(img_files))
     bottleneck_path = set_features_file(data_type, network,
                                         return_type='path')
@@ -49,9 +49,10 @@ def build_features(data_type, network = 'Resnet50'):
         np.savez(bottleneck_path, valid=bottleneck_features)
     else:
         np.savez(bottleneck_path, features=bottleneck_features)
-    
-    print("[INFO] Bottleneck features size (build_features):", bottleneck_features.shape)    
-    
+
+    print("[INFO] Bottleneck features size (build_features):",
+          bottleneck_features.shape)
+
     return bottleneck_features
 
 
@@ -59,7 +60,7 @@ def load_features(data_type, network = 'Resnet50'):
     """Load features from the file
        Only one dataset, e.g. train, valid, test is loaded
     """
-    
+
     bottleneck_path = set_features_file(data_type, network)
     print("[INFO] Using %s" % bottleneck_path)
     bottleneck_features = np.load(bottleneck_path)[data_type]

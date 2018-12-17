@@ -24,6 +24,7 @@ from keras import backend
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 
+
 class TimeHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.total_duration = 0.
@@ -40,6 +41,7 @@ class TimeHistory(keras.callbacks.Callback):
         self.durations.append(duration_epoch)
         self.val_acc = logs.get('val_acc')
         self.val_loss = logs.get('val_loss')
+
 
 def get_metadata():
     """
@@ -66,20 +68,20 @@ def get_metadata():
                 meta[par] = value
 
     return meta
-        
+
 
 def prepare_data(network='Resnet50'):
     """ Function to prepare data
     """
     mdata.prepare_data(network)
-    
+
 
 def build_model(network='Resnet50'):
     """
     Build network. Possible nets:
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
-    
+
     train_net = bfeatures.load_features('train', network)
     dog_names = dutils.dog_names_load()
     nclasses = len(dog_names)
@@ -91,12 +93,12 @@ def build_model(network='Resnet50'):
 
     print("__"+network+"__: ")
     net_model.summary()
-    net_model.compile(loss='categorical_crossentropy', 
-                      optimizer='rmsprop', 
+    net_model.compile(loss='categorical_crossentropy',
+                      optimizer='rmsprop',
                       metrics=['accuracy'])
     
     return net_model
-        
+
 
 def predict_file(img_path, network='Resnet50'):
     """
@@ -115,21 +117,21 @@ def predict_file(img_path, network='Resnet50'):
 
     # clear possible pre-existing sessions. IMPORTANT!
     backend.clear_session()
-    
+
     # check that all necessary data is there
     prepare_data(network)
-    
+
     weights_file = 'weights.best.' + network + '.hdf5'
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file) 
-    
+
     # check if the weights file exists locally. if not -> try to download
-    status_weights, _ = dutils.maybe_download_data(data_dir='/models', 
+    status_weights, _ = dutils.maybe_download_data(data_dir='/models',
                                                    data_file = weights_file)
 
     if status_weights:
         net_model = build_model(network)
         net_model.load_weights(saved_weights_path)
-    
+
         # extract bottleneck features
         bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
         print("[INFO] Bottleneck feature size:", bottleneck_feature.shape)
@@ -157,9 +159,9 @@ def predict_file(img_path, network='Resnet50'):
 def predict_data(img, network='Resnet50'):
     if not isinstance(img, list):
         img = [img]
-    
+
     filenames = []
-            
+
     for image in img:
         f = tempfile.NamedTemporaryFile(delete=False)
         f.write(image)
@@ -183,7 +185,7 @@ def predict_data(img, network='Resnet50'):
 def predict_url(*args):
     message = 'Not (yet) implemented in the model (predict_url())'
     return message
-        
+
 
 def train(nepochs=10, network='Resnet50'):
     """
@@ -193,15 +195,15 @@ def train(nepochs=10, network='Resnet50'):
     time_start = time.time()
     prepare_data(network)
     time_prepare = time.time() - time_start
-    
+
     train_targets = dutils.load_targets('train')
     valid_targets = dutils.load_targets('valid')
     test_targets = dutils.load_targets('test')
-    
+
     train_net = bfeatures.load_features('train', network)
     valid_net = bfeatures.load_features('valid', network)
     test_net = bfeatures.load_features('test', network)
-    
+
     print('[INFO] Sizes of bottleneck_features (train, valid, test):')
     print(train_net.shape, valid_net.shape, test_net.shape)
     data_size = {
@@ -209,42 +211,44 @@ def train(nepochs=10, network='Resnet50'):
         'valid': len(valid_targets),
         'test': len(test_targets)
         }
-    
+
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
                                      'weights.best.' + network + '.hdf5')
     checkpointer = ModelCheckpoint(filepath=saved_weights_path, verbose=1, save_best_only=True)
 
     # clear possible pre-existing sessions. important!
     backend.clear_session()
- 
+
     net_model = build_model(network)
-    
+
     time_callback = TimeHistory()        
     net_model.fit(train_net, train_targets, 
                   validation_data=(valid_net, valid_targets),
-                  epochs=nepochs, batch_size=20, callbacks=[checkpointer, time_callback], verbose=1)
+                  epochs=nepochs, batch_size=20, 
+                  callbacks=[checkpointer, time_callback], verbose=1)
 
     mn = np.mean(time_callback.durations)
     std = np.std(time_callback.durations, ddof=1)
-    
+
     net_model.load_weights(saved_weights_path)
     net_predictions = [np.argmax(net_model.predict(np.expand_dims(feature, axis=0))) for feature in test_net]
-    
+
     # report test accuracy
     test_accuracy = 100.*np.sum(np.array(net_predictions)==np.argmax(test_targets, axis=1))/float(len(net_predictions))
     print('[INFO] Test accuracy: %.4f%%' % test_accuracy)
-    
+
     # generate a classification report for the model
     print("[INFO] Classification Report:")
-    print(classification_report(np.argmax(test_targets, axis=1), net_predictions))
+    print(classification_report(np.argmax(test_targets, axis=1), 
+                                net_predictions))
     # compute the raw accuracy with extra precision
     acc = accuracy_score(np.argmax(test_targets, axis=1), net_predictions)
     print("[INFO] score: {}".format(acc))
-    
+
     # copy trained weights back to nextcloud
     dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/models'
-    print("[INFO] Upload %s to %s" % (saved_weights_path, dest_dir))    
+    print("[INFO] Upload %s to %s" % (saved_weights_path, dest_dir))
     dutils.rclone_copy(saved_weights_path, dest_dir)
 
-    return mutils.format_train(network, test_accuracy, nepochs, 
+    return mutils.format_train(network, test_accuracy, nepochs,
                                data_size, time_prepare, mn, std)
