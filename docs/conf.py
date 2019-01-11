@@ -231,7 +231,7 @@ man_pages = [
 texinfo_documents = [
     ('index', 'dogs_breed_det', u'Dogs breed detector Documentation',
      u"Valentin Kozlov", 'Dogs breed detector',
-     'Dog's breed detector', 'Miscellaneous'),
+     'Dogs breed detector', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
