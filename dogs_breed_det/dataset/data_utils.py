@@ -187,7 +187,7 @@ def build_targets(data_type):
         np.savez(targets_path, features=dog_targets)
     
     print("[INFO] Targets file shape (%s): %s" % 
-           (data_type, dog_targets.shape) )   
+           (data_type, dog_targets.shape) )
     
     return dog_targets
 
@@ -222,7 +222,24 @@ def dog_names_create():
     :return:  list of string-valued dog breed names for translating labels
     """
     dataImagesTrain = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, 'train','*')
-    dog_names = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
+    #dog_names = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
+    
+    # attempt to identify 'numbered' directories and 'not numbered'
+    dot_count = 0
+    dir_count = 0
+    for item in sorted(glob(dataImagesTrain)):
+        if '.' in item:
+            dot_count += 1 
+        dir_count += 1
+
+    flag_dot = True if dot_count == dir_count else False
+    
+    if flag_dot:
+        dog_names = [os.path.basename(os.path.normpath(item)).split('.', 1)[1] 
+                     for item in sorted(glob(dataImagesTrain))]
+    else:
+        dog_names = [os.path.basename(os.path.normpath(item)) 
+                     for item in sorted(glob(dataImagesTrain))]        
 
     print('[INFO] Creating %s file with %d classes (dogs breeds)' % 
           (cfg.Dog_LabelsFile, len(dog_names)))
