@@ -14,6 +14,7 @@ pipeline {
         author_email = "valentin.kozlov@kit.edu"
         app_name = "dogs_breed_det"
         job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/master"
+        job_cpu_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/cpu"
     }
 
     stages {
@@ -64,6 +65,9 @@ pipeline {
                 script {
                     def job_result = JenkinsBuildJob("${env.job_location}")
                     job_result_url = job_result.absoluteUrl
+                    // also rebuild CPU version
+                    def job_cpu_result = JenkinsBuildJob("${env.job_cpu_location}")
+                    job_cpu_result_url = job_cpu_result.absoluteUrl
                 }
             }
         }
@@ -92,8 +96,11 @@ A new build of '${app_name} DEEP application is available in Jenkins at:\n\n
 terminated with '${build_status}' status.\n\n
 Check console output at:\n\n
 *  ${env.BUILD_URL}/console\n\n
-and resultant Docker image rebuilding job at (may be empty in case of FAILURE):\n\n
+and resultant Docker images rebuilding jobs at (may be empty in case of FAILURE):\n\n
+Default (GPU) version:\n\n
 *  ${job_result_url}\n\n
+CPU version:\n\n
+*  ${job_cpu_result_url}\n\n
 DEEP Jenkins CI service"""
 
                 EmailSend(subject, body, "${author_email}")
