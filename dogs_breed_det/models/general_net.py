@@ -43,6 +43,13 @@ class TimeHistory(keras.callbacks.Callback):
         self.val_loss = logs.get('val_loss')
 
 
+def get_resnet_weights(remote_url='Dog_RemoteWeights'):
+    """Download default weights for Resnet50
+    """
+    weights_file = 'weights.best.Resnet50.hdf5'
+    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file)
+          
+
 def get_metadata():
     """
     Function to read metadata
@@ -82,13 +89,22 @@ def build_model(network='Resnet50'):
     Resnet50, VGG19, VGG16, InceptionV3, Xception
     """
 
-    train_net = bfeatures.load_features('train', network)
+    # introduce bottleneck_features shapes manually 
+    features_shape = {'VGG16': [7, 7, 512],
+                      'VGG19': [7, 7, 512],
+                      'Resnet50': [1, 1, 2048],
+                      'InceptionV3': [5, 5, 2048],
+                      'Xception': [7, 7, 2048],
+    }
+
+    #train_net = bfeatures.load_features('train', network)
     dog_names = dutils.dog_names_load()
     nclasses = len(dog_names)
     print('[INFO] Found %d classes (dogs breeds)' % nclasses)
 
     net_model = Sequential()
-    net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
+    #net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
+    net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
     net_model.add(Dense(nclasses, activation='softmax'))
 
     print("__" + network+"__: ")
@@ -120,7 +136,7 @@ def predict_file(img_path, network='Resnet50'):
     backend.clear_session()
 
     # check that all necessary data is there
-    prepare_data(network)
+    #prepare_data(network)
 
     weights_file = 'weights.best.' + network + '.hdf5'
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file) 
@@ -128,6 +144,26 @@ def predict_file(img_path, network='Resnet50'):
     # check if the weights file exists locally. if not -> try to download
     status_weights, _ = dutils.maybe_download_data(data_dir='/models',
                                                    data_file=weights_file)
+    
+    dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
+    # check if the labels file exists locally. if not -> try to download
+    status_weights, _ = dutils.maybe_download_data(data_dir='/data',
+                                                   data_file=dog_names_file)
+                                                   
+
+    # attempt to download default weights file for Resnet50                                                   
+    if not status_weights and network=='Resnet50':
+        print("[INFO] Trying to download weights and labels from the public link")
+        url_weights = cfg.Dog_RemoteShare + weights_file
+        status_weights, _ = dutils.url_download(
+                                   url_path = url_weights, 
+                                   data_dir='/models',
+                                   data_file=weights_file)
+        url_dog_names = cfg.Dog_RemoteShare + dog_names_file
+        status_weights, _ = dutils.url_download(
+                                   url_path = url_dog_names, 
+                                   data_dir='/data',
+                                   data_file=dog_names_file)                                   
 
     if status_weights:
         net_model = build_model(network)
@@ -135,11 +171,11 @@ def predict_file(img_path, network='Resnet50'):
 
         # extract bottleneck features
         bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
-        print("[INFO] Bottleneck feature size:", bottleneck_feature.shape)
+        print("[INFO] Bottleneck feature size: %s" % str(bottleneck_feature.shape))
         dog_names  = dutils.dog_names_load()
         # obtain predicted vector
         predicted_vector = net_model.predict(bottleneck_feature)
-        print("[INFO] Sum:", np.sum(predicted_vector))
+        print("[INFO] Sum: %f" % np.sum(predicted_vector))
         # return dog breed that is predicted by the model
         idxs = np.argsort(predicted_vector[0])[::-1][:5] 
         # dog_names_best = [ dog_names[i] for i in idxs ]
@@ -148,7 +184,7 @@ def predict_file(img_path, network='Resnet50'):
         for i in idxs:
             dog_names_best.append(dog_names[i])
             probs_best.append(predicted_vector[0][i])
-            print(dog_names[i], " : ", predicted_vector[0][i]) 
+            print("%s : %f" % (dog_names[i], predicted_vector[0][i]))
 
         msg = mutils.format_prediction(dog_names_best, probs_best)
     else:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import zipfile
 import subprocess
 import numpy as np
@@ -7,6 +8,7 @@ import dogs_breed_det.config as cfg
 from sklearn.datasets import load_files       
 from keras.utils import np_utils
 from glob import glob
+from six.moves import urllib
 
 from keras.preprocessing import image                  
 from tqdm import tqdm
@@ -89,6 +91,35 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
 
     return dest_exist, error_out
 
+def url_download(url_path, data_dir, data_file):
+
+    #join doesn't work if data_dir starts with '/'!
+    data_dir = data_dir.lstrip('/')
+    data_dir = data_dir.rstrip('/')
+    
+    file_path = os.path.join(cfg.BASE_DIR, data_dir, data_file)
+
+    def _progress(count, block_size, total_size):
+        sys.stdout.write('\r>> Downloading %s %.1f%%' % (data_file,
+                        float(count * block_size) / float(total_size) * 100.0))
+        sys.stdout.flush()
+
+    file_path, _ = urllib.request.urlretrieve(url_path, file_path, _progress)
+    print()
+    statinfo = os.stat(file_path)
+    
+    if os.path.exists(file_path):
+        print('[INFO] Successfully downloaded %s, %d bytes' % 
+               (data_file, statinfo.st_size))
+        dest_exist = True
+        error_out = None
+    else:
+        dest_exist = False
+        error_out = '[ERROR] Failed to download ' + data_file + \
+                    ' from ' + url_path
+        
+    return dest_exist, error_out
+    
 
 def maybe_download_data(remote_storage=cfg.Dog_RemoteStorage, 
                         data_dir='/models/bottleneck_features',
