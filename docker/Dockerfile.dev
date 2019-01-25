@@ -38,17 +38,22 @@ RUN wget https://downloads.rclone.org/rclone-current-linux-amd64.deb && \
 ENV LANG C.UTF-8
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /srv
 
 # Install python packages listed in requirements.txt
-COPY requirements-dev.txt /root
-RUN pip --no-cache-dir install -r /root/requirements-dev.txt \
+COPY requirements-dev.txt /srv
+RUN pip --no-cache-dir install -r /srv/requirements-dev.txt \
 ### (OPTIONAL!) If you want to use Jupyter, uncomment:
 #        jupyter \
 #        jupyterlab && \
 #   python -m ipykernel.kernelspec \
 ###
     && \
+    rm -rf /root/.cache/pip/* && \
+    rm -rf /tmp/*
+
+# Install DEEPaaS:
+RUN pip install --no-cache-dir deepaas && \
     rm -rf /root/.cache/pip/* && \
     rm -rf /tmp/*
 
@@ -63,3 +68,7 @@ RUN pip --no-cache-dir install -r /root/requirements-dev.txt \
 #EXPOSE 8888
 ###
 
+# Open DEEPaaS port
+EXPOSE 5000
+
+CMD deepaas-run --listen-ip=0.0.0.0

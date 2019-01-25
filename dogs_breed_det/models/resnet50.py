@@ -59,6 +59,29 @@ def train(nepochs=10):
     return gennet.train(nepochs, 'Resnet50')
 
 
+def get_train_args():
+    """
+    Returns a dict of dicts with the following structure to feed the deepaas API parser:
+    { 'arg1' : {'default': '1',     #value must be a string (use json.dumps to convert Python objects)
+                'help': '',         #can be an empty string
+                'required': False   #bool
+                },
+      'arg2' : {...
+                },
+    ...
+    }
+    """
+#    
+    train_args = {}
+#    
+#    train_args = { 'nepochs': {'default': '10',
+#                                'help': 'Number of epochs to train on',
+#                                'required': False
+#                                },
+#                 }
+#    
+    return train_args
+
 # during development it might be practical 
 # to check your code from the command line
 def main():
