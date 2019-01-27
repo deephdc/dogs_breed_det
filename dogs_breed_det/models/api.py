@@ -7,8 +7,11 @@ Created on Mon Sep  3 21:29:57 2018
 
 import os
 import time
+import json
+import yaml
 import keras
 import tempfile
+import argparse
 import numpy as np
 import pkg_resources
 import dogs_breed_det.config as cfg
@@ -224,10 +227,52 @@ def predict_url(*args):
     return message
 
 
-def train(nepochs=10, network='Resnet50'):
+def train(train_args):
     """
     Train network (transfer learning)
+    Parameters
+    ----------
+    user_conf : dict
+        Json dict (created with json.dumps) with the user's configuration parameters that will replace the defaults.
+        Can be loaded with json.loads() or (better for strings) with yaml.safe_load()
+        For example:
+            user_conf={'num_classes': 'null', 'lr_step_decay': '0.1', 'lr_step_schedule': '[0.7, 0.9]', 'use_early_stopping': 'false'}
     """
+
+    args = train_args
+    def arg_decode(json_par):
+        try:
+            par = json.loads(json_par)
+        except:
+            if type(par) is str:
+                par = json_par
+            else:
+                print("[ERROR] Unknown error in JSON conversion!")
+                raise
+        return par
+        
+    print("args:", args)
+    print args.num_epochs
+    lr_step_schedule = yaml.safe_load(args.lr_step_schedule) #json.loads(args.lr_step_schedule)
+    print args.lr_step_schedule
+    print lr_step_schedule
+    print lr_step_schedule[0] + lr_step_schedule[1]
+    
+    early_stop = yaml.safe_load(args.use_early_stop)
+    
+    if early_stop:
+        print("Has to be true: ", early_stop)
+    if not early_stop:
+        print("Has to be false: ", early_stop)
+    
+    print(type(args.num_epochs), type(args.network))
+    num_epochs = yaml.safe_load(args.num_epochs)
+
+    #network = arg_decode(args.network)
+    #network = json.loads(args.network)
+    network = yaml.safe_load(args.network)
+    print("Network:", args.network, network)
+    
     # check that all necessary data is there
     time_start = time.time()
     prepare_data(network)
@@ -262,7 +307,7 @@ def train(nepochs=10, network='Resnet50'):
     time_callback = TimeHistory()        
     net_model.fit(train_net, train_targets, 
                   validation_data=(valid_net, valid_targets),
-                  epochs=nepochs, batch_size=20, 
+                  epochs=num_epochs, batch_size=20, 
                   callbacks=[checkpointer, time_callback], verbose=1)
 
     mn = np.mean(time_callback.durations)
@@ -288,5 +333,68 @@ def train(nepochs=10, network='Resnet50'):
     print("[INFO] Upload %s to %s" % (saved_weights_path, dest_dir))
     dutils.rclone_copy(saved_weights_path, dest_dir)
 
-    return mutils.format_train(network, test_accuracy, nepochs,
+    return mutils.format_train(network, test_accuracy, num_epochs,
                                data_size, time_prepare, mn, std)
+
+                     
+def get_train_args():
+
+    train_args = cfg.set_train_args()
+    
+    # convert default values and possible 'choices' into strings
+    for key, val in train_args.items():
+        val['default'] = str(val['default']) #yaml.safe_dump(val['default']) #json.dumps(val['default'])
+        if 'choices' in val:
+            val['choices'] = [str(item) for item in val['choices']]
+        print(val['default'], type(val['default']))
+        
+    return train_args
+
+# during development it might be practical 
+# to check your code from the command line
+def main():
+    """
+       Runs above-described functions depending on input parameters
+       (see below an example)
+    """
+    
+    if args.method == 'get_metadata':
+        get_metadata()       
+    elif args.method == 'predict_file':
+        predict_file(args.file)
+    elif args.method == 'predict_data':
+        predict_data(args.file)
+    elif args.method == 'predict_url':
+        predict_url(args.url)
+    elif args.method == 'train':
+        start = time.time()
+        train(args)
+        print("Elapsed time:  ", time.time() - start)
+    else:
+        get_metadata()
+
+
+if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser(description='Model parameters')
+
+    train_args = get_train_args()
+    for key, val in train_args.items():
+        parser.add_argument('--%s' % key,
+                            default=val['default'],
+                            type=type(val['default']), #may just put str
+                            help=val['help'])
+        print(key, val)
+        print(type(val['default']))
+
+    parser.add_argument('--method', type=str, default="get_metadata",
+                        help='Method to use: get_metadata (default), \
+                        predict_file, predict_data, predict_url, train')
+    parser.add_argument('--file', type=str, help='File to do prediction on, full path')
+    parser.add_argument('--url', type=str, help='URL with the image to do prediction on')
+
+    args = parser.parse_args()
+    print("Vars:", vars(args))
+    
+    main()
+
