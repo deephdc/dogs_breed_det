@@ -17,8 +17,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
          wget \
          python-setuptools \
          python-pip \
-         python-wheel \
-         python-virtualenv && \ 
+         python-wheel && \ 
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /root/.cache/pip/* && \

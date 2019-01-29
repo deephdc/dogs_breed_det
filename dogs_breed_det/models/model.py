@@ -122,7 +122,6 @@ def build_model(network='Resnet50'):
     return net_model
 
 
-@flat.login_required()
 def predict_file(img_path, network='Resnet50'):
     """
     Function to make prediction which breed is closest
@@ -200,7 +199,6 @@ def predict_file(img_path, network='Resnet50'):
     return msg
 
 
-@flat.login_required()
 def predict_data(img, network='Resnet50'):
     if not isinstance(img, list):
         img = [img]
@@ -232,7 +230,7 @@ def predict_url(*args):
     return message
 
 
-@flat.login_required()
+#@flat.login_required()
 def train(train_args):
     """
     Train network (transfer learning)
@@ -244,18 +242,6 @@ def train(train_args):
     """
   
     print("train_args:", train_args)
-
-    lr_step_schedule = yaml.safe_load(train_args.lr_step_schedule) #json.loads(args.lr_step_schedule)
-
-    print lr_step_schedule
-    print lr_step_schedule[0] + lr_step_schedule[1]
-    
-    early_stop = yaml.safe_load(train_args.use_early_stop)
-    
-    if early_stop:
-        print("Has to be true: ", early_stop)
-    if not early_stop:
-        print("Has to be false: ", early_stop)
     
     print(type(train_args.num_epochs), type(train_args.network))
     num_epochs = yaml.safe_load(train_args.num_epochs)

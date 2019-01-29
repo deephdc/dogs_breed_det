@@ -36,14 +36,14 @@ def set_train_args():
                                  'required': False
                                },
                    ## the lines below are kept as example:
-                   'lr_step_schedule': { 'default': [0.7, 0.9],
-                                         'help': 'List of the fraction of the total time at which apply a decay',
-                                         'required': False
-                                       },
-                   'use_early_stop': { 'default': False,
-                                       'choices': [True, False],
-                                       'help': 'Early stopping parameter',
-                                       'required': False
-                                       }
+                   #'lr_step_schedule': { 'default': [0.7, 0.9],
+                   #                      'help': 'List of the fraction of the total time at which apply a decay',
+                   #                      'required': False
+                   #                    },
+                   #'use_early_stop': { 'default': False,
+                   #                    'choices': [True, False],
+                   #                    'help': 'Early stopping parameter',
+                   #                    'required': False
+                   #                    }
                  }
     return train_args
