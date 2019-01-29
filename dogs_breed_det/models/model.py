@@ -230,7 +230,8 @@ def predict_url(*args):
     return message
 
 
-#@flat.login_required()
+# Require only authorized people to do training
+@flat.login_required()
 def train(train_args):
     """
     Train network (transfer learning)
@@ -355,6 +356,7 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Model parameters')
 
+    # get arguments configured for get_train_args()
     train_args = get_train_args()
     for key, val in train_args.items():
         parser.add_argument('--%s' % key,

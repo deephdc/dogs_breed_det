@@ -38,7 +38,7 @@ Project Organization
     │
     ├── requirements-dev.txt   <- The requirements file for the development environment
     │
-    ├── requirements-test.txt  <- The requirements file for the test environment
+    ├── test-requirements.txt  <- The requirements file for the test environment
     │
     ├── requirements.txt       <- The requirements file for reproducing the analysis environment, e.g.
     │                             generated with `pip freeze > requirements.txt`
@@ -52,13 +52,7 @@ Project Organization
     │   ├── features           <- Scripts to turn raw data into features for modeling
     │   │
     │   ├── models             <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   └── general_net.py <- General, or parameterized, neural network model description.
-    │   │   └── inceptionV3.py <- InceptionV3 model, calls general_net functions to use InceptionV3.
-    │   │   └── resnet50.py    <- Resnet50 model, calls general_net functions to use Resnet50.
-    │   │   └── vgg16.py       <- VGG16 model, calls general_net functions to use VGG16.
-    │   │   └── vgg19.py       <- VGG19 model, calls general_net functions to use VGG19.
-    │   │   └── xception.py    <- Xception model, calls general_net functions to use Xception.
+    │   │                         predictions
     │   │
     │   └── tests              <- Scripts to perfrom code testing + pylint script
     │   │
