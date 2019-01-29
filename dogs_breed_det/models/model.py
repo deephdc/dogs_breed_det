@@ -7,7 +7,6 @@ Created on Mon Sep  3 21:29:57 2018
 
 import os
 import time
-import json
 import yaml
 import keras
 import tempfile
@@ -27,6 +26,10 @@ from keras import backend
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 
+## Authorization
+from flat import Flat
+flat = Flat()
+    
 
 class TimeHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -119,6 +122,7 @@ def build_model(network='Resnet50'):
     return net_model
 
 
+@flat.login_required()
 def predict_file(img_path, network='Resnet50'):
     """
     Function to make prediction which breed is closest
@@ -196,6 +200,7 @@ def predict_file(img_path, network='Resnet50'):
     return msg
 
 
+@flat.login_required()
 def predict_data(img, network='Resnet50'):
     if not isinstance(img, list):
         img = [img]
@@ -227,6 +232,7 @@ def predict_url(*args):
     return message
 
 
+@flat.login_required()
 def train(train_args):
     """
     Train network (transfer learning)
@@ -235,43 +241,28 @@ def train(train_args):
     user_conf : dict
         Json dict (created with json.dumps) with the user's configuration parameters that will replace the defaults.
         Can be loaded with json.loads() or (better for strings) with yaml.safe_load()
-        For example:
-            user_conf={'num_classes': 'null', 'lr_step_decay': '0.1', 'lr_step_schedule': '[0.7, 0.9]', 'use_early_stopping': 'false'}
     """
+  
+    print("train_args:", train_args)
 
-    args = train_args
-    def arg_decode(json_par):
-        try:
-            par = json.loads(json_par)
-        except:
-            if type(par) is str:
-                par = json_par
-            else:
-                print("[ERROR] Unknown error in JSON conversion!")
-                raise
-        return par
-        
-    print("args:", args)
-    print args.num_epochs
-    lr_step_schedule = yaml.safe_load(args.lr_step_schedule) #json.loads(args.lr_step_schedule)
-    print args.lr_step_schedule
+    lr_step_schedule = yaml.safe_load(train_args.lr_step_schedule) #json.loads(args.lr_step_schedule)
+
     print lr_step_schedule
     print lr_step_schedule[0] + lr_step_schedule[1]
     
-    early_stop = yaml.safe_load(args.use_early_stop)
+    early_stop = yaml.safe_load(train_args.use_early_stop)
     
     if early_stop:
         print("Has to be true: ", early_stop)
     if not early_stop:
         print("Has to be false: ", early_stop)
     
-    print(type(args.num_epochs), type(args.network))
-    num_epochs = yaml.safe_load(args.num_epochs)
+    print(type(train_args.num_epochs), type(train_args.network))
+    num_epochs = yaml.safe_load(train_args.num_epochs)
 
-    #network = arg_decode(args.network)
     #network = json.loads(args.network)
-    network = yaml.safe_load(args.network)
-    print("Network:", args.network, network)
+    network = yaml.safe_load(train_args.network)
+    print("Network:", train_args.network, network)
     
     # check that all necessary data is there
     time_start = time.time()

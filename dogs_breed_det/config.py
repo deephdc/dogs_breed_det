@@ -16,9 +16,9 @@ Dog_LabelsFile = path.join(BASE_DIR, 'data','dog_names.txt')
 def set_train_args():
     """
     Returns a dict of dicts with the following structure to feed the deepaas API parser:
-    { 'arg1' : {'default': '1',     #value must be a string (use json.dumps to convert Python objects)
-                'help': '',         #can be an empty string
-                'required': False   #bool
+    { 'arg1' : {'default': 1,       # deafult value
+                'help': '',         # can be an empty string
+                'required': False   # bool
                 },
       'arg2' : {...
                 },
@@ -35,13 +35,14 @@ def set_train_args():
                                  'help': 'Neural model to use',
                                  'required': False
                                },
+                   ## the lines below are kept as example:
                    'lr_step_schedule': { 'default': [0.7, 0.9],
                                          'help': 'List of the fraction of the total time at which apply a decay',
                                          'required': False
                                        },
                    'use_early_stop': { 'default': False,
                                        'choices': [True, False],
-                                       'help': 'early stopping parameter',
+                                       'help': 'Early stopping parameter',
                                        'required': False
                                        }
                  }

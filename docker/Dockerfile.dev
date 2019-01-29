@@ -17,7 +17,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
          wget \
          python-setuptools \
          python-pip \
-         python-wheel && \ 
+         python-wheel \
+         python-virtualenv && \ 
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /root/.cache/pip/* && \
@@ -27,6 +28,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 RUN wget https://downloads.rclone.org/rclone-current-linux-amd64.deb && \
     dpkg -i rclone-current-linux-amd64.deb && \
     apt install -f && \
+    touch /srv/.rclone.conf && \
     rm rclone-current-linux-amd64.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
@@ -37,8 +39,15 @@ RUN wget https://downloads.rclone.org/rclone-current-linux-amd64.deb && \
 # Set LANG environment
 ENV LANG C.UTF-8
 
-# Set the working directory
-WORKDIR /srv
+# Set the working directory.
+# We expect the app will be mounted in /srv/app
+WORKDIR /srv/app
+
+ENV PYTHONPATH /srv/app:/srv/flat
+
+# Install FLAT (FLask support for handling Access Tokens)
+RUN cd /srv && git clone https://github.com/marcvs/flat.git && \
+    rm -rf /tmp/* 
 
 # Install python packages listed in requirements.txt
 COPY requirements-dev.txt /srv
