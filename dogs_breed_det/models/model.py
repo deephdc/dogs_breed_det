@@ -27,8 +27,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 
 ## Authorization
-from flat import Flat
-flat = Flat()
+from flaat import Flaat
+flaat = Flaat()
     
 
 class TimeHistory(keras.callbacks.Callback):
@@ -47,13 +47,6 @@ class TimeHistory(keras.callbacks.Callback):
         self.durations.append(duration_epoch)
         self.val_acc = logs.get('val_acc')
         self.val_loss = logs.get('val_loss')
-
-
-def get_resnet_weights(remote_url='Dog_RemoteWeights'):
-    """Download default weights for Resnet50
-    """
-    weights_file = 'weights.best.Resnet50.hdf5'
-    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file)
           
 
 def get_metadata():
@@ -109,8 +102,13 @@ def build_model(network='Resnet50'):
     print('[INFO] Found %d classes (dogs breeds)' % nclasses)
 
     net_model = Sequential()
+    # add a global average pooling layer    
     #net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
     net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
+    # add a fully-connected layer
+    fc_layers = int(features_shape[network][2]/2.)
+    net_model.add(Dense(fc_layers, activation='relu'))
+    # add a classification layer    
     net_model.add(Dense(nclasses, activation='softmax'))
 
     print("__" + network+"__: ")
@@ -231,7 +229,7 @@ def predict_url(*args):
 
 
 # Require only authorized people to do training
-@flat.login_required()
+@flaat.login_required()
 def train(train_args):
     """
     Train network (transfer learning)

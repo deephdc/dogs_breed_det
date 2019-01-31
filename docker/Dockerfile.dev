@@ -1,7 +1,7 @@
 ##################
 # Run from ~/dogs_breed_det as
 # $> docker build -t dockerimage -f docker/Dockerfile.dev .
-# Then use as
+# Then use as e.g.
 # $> docker run -ti -v ~/dogs_breed_det:/app dockerimage /bin/bash
 ##################
 # Base image, e.g. tensorflow/tensorflow:1.7.0
@@ -42,13 +42,17 @@ ENV LANG C.UTF-8
 # We expect the app will be mounted in /srv/app
 WORKDIR /srv/app
 
-ENV PYTHONPATH /srv/app:/srv/flat
+ENV PYTHONPATH /srv/app
 
 # Install FLAT (FLask support for handling Access Tokens)
-RUN cd /srv && git clone https://github.com/marcvs/flat.git && \
-    rm -rf /tmp/* 
+RUN pip install --no-cache-dir flaat && \
+    rm -rf /root/.cache/pip/* && \
+    rm -rf /tmp/*
 
-# Install python packages listed in requirements.txt
+# Disable FLAAT authentication by default
+ENV DISABLE_AUTHENTICATION_AND_ASSUME_AUTHENTICATED_USER yes
+
+# Install python packages listed in requirements-dev.txt
 COPY requirements-dev.txt /srv
 RUN pip --no-cache-dir install -r /srv/requirements-dev.txt \
 ### (OPTIONAL!) If you want to use Jupyter, uncomment:
@@ -79,4 +83,4 @@ RUN pip install --no-cache-dir deepaas && \
 # Open DEEPaaS port
 EXPOSE 5000
 
-CMD deepaas-run --listen-ip=0.0.0.0
+CMD ["deepaas-run","--listen-ip=0.0.0.0"]
