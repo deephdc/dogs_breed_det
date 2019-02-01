@@ -13,6 +13,17 @@ Dog_DataDir = 'dogImages'
 Dog_LabelsFile = path.join(BASE_DIR, 'data','dog_names.txt')
 
 
+machine_info = { 'cpu': '',
+                 'gpu': '',
+                 'memory_total': '',
+                 'memory_available': ''
+               }
+
+#cpu_info = ''
+#gpu_info = ''
+#memory_total = ''
+#memory_available = ''
+
 def set_train_args():
     """
     Returns a dict of dicts with the following structure to feed the deepaas API parser:
@@ -34,6 +45,11 @@ def set_train_args():
                                  'choices': ['Resnet50', 'InceptionV3', 'VGG16', 'VGG19'],
                                  'help': 'Neural model to use',
                                  'required': False
+                               },
+                   'run_info': {'default': False,
+                                'choices': [True, False],
+                                'help': 'Print information about the run (e.g. cpu, gpu, memory)',
+                                'required': False
                                },
                    ## the lines below are kept as example:
                    #'lr_step_schedule': { 'default': [0.7, 0.9],

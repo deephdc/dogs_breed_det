@@ -14,6 +14,7 @@ import argparse
 import numpy as np
 import pkg_resources
 import dogs_breed_det.config as cfg
+import dogs_breed_det.run_info as rinfo
 import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
@@ -47,8 +48,8 @@ class TimeHistory(keras.callbacks.Callback):
         self.durations.append(duration_epoch)
         self.val_acc = logs.get('val_acc')
         self.val_loss = logs.get('val_loss')
-          
 
+    
 def get_metadata():
     """
     Function to read metadata
@@ -239,6 +240,10 @@ def train(train_args):
         Json dict (created with json.dumps) with the user's configuration parameters that will replace the defaults.
         Can be loaded with json.loads() or (better for strings) with yaml.safe_load()
     """
+    run_results = { "status": "ok",
+                    "run_info": [],
+                    "training": [],
+                  }
   
     print("train_args:", train_args)
     
@@ -248,7 +253,17 @@ def train(train_args):
     #network = json.loads(args.network)
     network = yaml.safe_load(train_args.network)
     print("Network:", train_args.network, network)
-    
+
+    flag_run_info = yaml.safe_load(train_args.run_info)
+    print(flag_run_info)
+    if(flag_run_info):
+        rinfo.get_run_info(cfg.machine_info)
+        print("run_info should be True: ", flag_run_info)
+        print(cfg.machine_info)
+        run_results["run_info"].append(cfg.machine_info)
+    else:
+        print("run_info should be False: ", flag_run_info)
+
     # check that all necessary data is there
     time_start = time.time()
     prepare_data(network)
@@ -287,7 +302,7 @@ def train(train_args):
                   callbacks=[checkpointer, time_callback], verbose=1)
 
     mn = np.mean(time_callback.durations)
-    std = np.std(time_callback.durations, ddof=1)
+    std = np.std(time_callback.durations, ddof=1) if num_epochs > 1 else -1
 
     net_model.load_weights(saved_weights_path)
     net_predictions = [np.argmax(net_model.predict(np.expand_dims(feature, axis=0))) for feature in test_net]
@@ -308,9 +323,13 @@ def train(train_args):
     dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/models'
     print("[INFO] Upload %s to %s" % (saved_weights_path, dest_dir))
     dutils.rclone_copy(saved_weights_path, dest_dir)
+    
+    train_results = mutils.format_train(network, test_accuracy, num_epochs,
+                                        data_size, time_prepare, mn, std)
 
-    return mutils.format_train(network, test_accuracy, num_epochs,
-                               data_size, time_prepare, mn, std)
+    run_results["training"].append(train_results)
+
+    return run_results
 
                      
 def get_train_args():

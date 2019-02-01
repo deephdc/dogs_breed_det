@@ -44,7 +44,7 @@ WORKDIR /srv/app
 
 ENV PYTHONPATH /srv/app
 
-# Install FLAT (FLask support for handling Access Tokens)
+# Install FLAT (FLAsk support for handling Access Tokens)
 RUN pip install --no-cache-dir flaat && \
     rm -rf /root/.cache/pip/* && \
     rm -rf /tmp/*
