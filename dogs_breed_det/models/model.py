@@ -236,7 +236,7 @@ def train(train_args):
     Train network (transfer learning)
     Parameters
     ----------
-    user_conf : dict
+    train_args : dict
         Json dict (created with json.dumps) with the user's configuration parameters that will replace the defaults.
         Can be loaded with json.loads() or (better for strings) with yaml.safe_load()
     """
@@ -334,7 +334,7 @@ def train(train_args):
                      
 def get_train_args():
 
-    train_args = cfg.set_train_args()
+    train_args = cfg.train_args()
     
     # convert default values and possible 'choices' into strings
     for key, val in train_args.items():

@@ -15,29 +15,31 @@
 # ==============================================================================
 # 
 # modified by v.kozlov @2018-07-18 
-# to include JupyterCONF environment check
+# to include jupyterCONF environment check
 #
 ######
 
-jOPTS=""
+if [[ ! -v jupyterOPTS ]]; then
+    jupyterOPTS=""
+fi
 
-# Check if JupyterCONF environment is specified (can be passed to docker via "--env JupyterCONF=value")
+# Check if jupyterCONF environment is specified (can be passed to docker via "--env jupyterCONF=value")
 # If so, check for:
 #    jupyter_config_user.py - Jupyter config file defined by user, e.g. with pre-configured password
 #    jupyterSSL.key   - private key file for usage with SSL/TLS
 #    jupyterSSL.pem   - the full path to an SSL/TLS certificate file
 #
 # Idea: local directory at host machine with those files is mounted to docker container, e.g.
-#     --volume=host_dir:dir_in_container --env JupyterCONF=dir_in_container
+#     --volume=host_dir:dir_in_container --env jupyterCONF=dir_in_container
 # such that SSL connection is established and user-defined jupyter config is used
 
-if [ -v JupyterCONF ]; then
-    [[ -f $JupyterCONF/jupyter_config_user.py ]] && jConfig="$JupyterCONF/jupyter_config_user.py" && jOPTS=$jOPTS" --config=u'$jConfig'"
-    [[ -f $JupyterCONF/jupyterSSL.key ]] && jKeyfile="$JupyterCONF/jupyterSSL.key" && jOPTS=$jOPTS" --keyfile=u'$jKeyfile'"
-    [[ -f $JupyterCONF/jupyterSSL.pem ]] && jCertfile="$JupyterCONF/jupyterSSL.pem" && jOPTS=$jOPTS" --certfile=u'$jCertfile'"
+if [[ -v jupyterCONF ]]; then
+    [[ -f $jupyterCONF/jupyter_config_user.py ]] && jConfig="$jupyterCONF/jupyter_config_user.py" && jupyterOPTS=$jupyterOPTS" --config=u'$jConfig'"
+    [[ -f $jupyterCONF/jupyterSSL.key ]] && jKeyfile="$jupyterCONF/jupyterSSL.key" && jupyterOPTS=$jupyterOPTS" --keyfile=u'$jKeyfile'"
+    [[ -f $jupyterCONF/jupyterSSL.pem ]] && jCertfile="$jupyterCONF/jupyterSSL.pem" && jupyterOPTS=$jupyterOPTS" --certfile=u'$jCertfile'"
 fi
 
 # mainly for debugging:
-echo "opts: $jOPTS"
+echo "opts: $jupyterOPTS"
 
-jupyter notebook $jOPTS "$@"
+jupyter notebook $jupyterOPTS "$@"

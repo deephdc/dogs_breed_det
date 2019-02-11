@@ -61,7 +61,7 @@ def check_features(data_type, network='Resnet50'):
         
         # Upload to nextcloud newly created file
         bottleneck_exists = True if os.path.exists(bottleneck_path) else False
-        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + data_dir
+        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/'+ data_dir
         print("[INFO] Upload %s to %s" % (bottleneck_path, dest_dir))
         dutils.rclone_copy(bottleneck_path, dest_dir)
         
