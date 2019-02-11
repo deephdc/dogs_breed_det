@@ -331,18 +331,18 @@ def train(train_args):
 
     return run_results
 
-                     
+
 def get_train_args():
 
-    train_args = cfg.train_args()
-    
+    train_args = cfg.train_args
+
     # convert default values and possible 'choices' into strings
     for key, val in train_args.items():
         val['default'] = str(val['default']) #yaml.safe_dump(val['default']) #json.dumps(val['default'])
         if 'choices' in val:
             val['choices'] = [str(item) for item in val['choices']]
         print(val['default'], type(val['default']))
-        
+
     return train_args
 
 # during development it might be practical 
@@ -352,7 +352,7 @@ def main():
        Runs above-described functions depending on input parameters
        (see below an example)
     """
-    
+
     if args.method == 'get_metadata':
         get_metadata()       
     elif args.method == 'predict_file':
