@@ -1,6 +1,6 @@
 #!/usr/bin/groovy
 
-@Library(['github.com/indigo-dc/jenkins-pipeline-library']) _
+@Library(['github.com/indigo-dc/jenkins-pipeline-library@1.2.1']) _
 
 def job_result_url = ''
 
@@ -14,7 +14,6 @@ pipeline {
         author_email = "valentin.kozlov@kit.edu"
         app_name = "dogs_breed_det"
         job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/master"
-        job_cpu_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/cpu"
     }
 
     stages {
@@ -61,13 +60,16 @@ pipeline {
         }
 
         stage("Re-build DEEP-OC-dogs_breed_det Docker image") {
+          when {
+                anyOf {
+                   branch 'master'
+                   buildingTag()
+               }
+            }
             steps {
                 script {
                     def job_result = JenkinsBuildJob("${env.job_location}")
                     job_result_url = job_result.absoluteUrl
-                    // also rebuild CPU version
-                    def job_cpu_result = JenkinsBuildJob("${env.job_cpu_location}")
-                    job_cpu_result_url = job_cpu_result.absoluteUrl
                 }
             }
         }
@@ -97,10 +99,8 @@ terminated with '${build_status}' status.\n\n
 Check console output at:\n\n
 *  ${env.BUILD_URL}/console\n\n
 and resultant Docker images rebuilding jobs at (may be empty in case of FAILURE):\n\n
-Default (GPU) version:\n\n
 *  ${job_result_url}\n\n
-CPU version:\n\n
-*  ${job_cpu_result_url}\n\n
+
 DEEP Jenkins CI service"""
 
                 EmailSend(subject, body, "${author_email}")
