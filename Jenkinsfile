@@ -1,6 +1,6 @@
 #!/usr/bin/groovy
 
-@Library(['github.com/indigo-dc/jenkins-pipeline-library@1.2.1']) _
+@Library(['github.com/indigo-dc/jenkins-pipeline-library@1.2.3']) _
 
 def job_result_url = ''
 
@@ -14,6 +14,7 @@ pipeline {
         author_email = "valentin.kozlov@kit.edu"
         app_name = "dogs_breed_det"
         job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/master"
+        job_location_test = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/test"
     }
 
     stages {
@@ -59,20 +60,26 @@ pipeline {
             }
         }
 
-        stage("Re-build DEEP-OC-dogs_breed_det Docker image") {
-          when {
+        stage("Re-build Docker images") {
+            when {
                 anyOf {
                    branch 'master'
+                   branch 'test'
                    buildingTag()
                }
             }
             steps {
                 script {
-                    def job_result = JenkinsBuildJob("${env.job_location}")
+                    job_to_build = "${env.job_location}"
+                    if (env.BRANCH_NAME == 'test') {
+                       job_to_build = "${env.job_location_test}"
+                    }
+                    def job_result = JenkinsBuildJob(job_to_build)
                     job_result_url = job_result.absoluteUrl
                 }
             }
         }
+
     }
 
     post {
