@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Info collection about the runngin host.
+Info collection about the running host.
 Very much based on tensorflow/models/official/utils/logs/logger.py
 
 @author: valentin

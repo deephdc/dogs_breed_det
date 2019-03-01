@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright (c) 2017 - 2019 Karlsruhe Institute of Technology - Steinbuch Centre for Computing
+# This code is distributed under the MIT License
+# Please, see the LICENSE file
+#
 import os
 import sys
 import zipfile
