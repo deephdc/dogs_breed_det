@@ -13,8 +13,7 @@ pipeline {
         author_name = "V.Kozlov (KIT)"
         author_email = "valentin.kozlov@kit.edu"
         app_name = "dogs_breed_det"
-        job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/master"
-        job_location_test = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/test"
+        job_location = "Pipeline-as-code/DEEP-OC-org/DEEP-OC-dogs_breed_det/${env.BRANCH_NAME}"
     }
 
     stages {
@@ -70,11 +69,7 @@ pipeline {
             }
             steps {
                 script {
-                    job_to_build = "${env.job_location}"
-                    if (env.BRANCH_NAME == 'test') {
-                       job_to_build = "${env.job_location_test}"
-                    }
-                    def job_result = JenkinsBuildJob(job_to_build)
+                    def job_result = JenkinsBuildJob("${env.job_location}")
                     job_result_url = job_result.absoluteUrl
                 }
             }
