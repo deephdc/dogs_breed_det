@@ -1,9 +1,9 @@
 Dog's breed detector
 ==============================
 
-[![Build Status](https://jenkins.indigo-datacloud.eu:8080/buildStatus/icon?job=Pipeline-as-code/DEEP-OC-org/dogs_breed_det/master)](https://jenkins.indigo-datacloud.eu:8080/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master/)
+[![Build Status](https://jenkins.indigo-datacloud.eu:8080/buildStatus/icon?job=Pipeline-as-code/DEEP-OC-org/dogs_breed_det/master)](https://jenkins.indigo-datacloud.eu:8080/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master)
 
-A toy example to identify Dog's breed, "Dogs breed detector", as example for [DEEPaaS API](https://github.com/indigo-dc/DEEPaaS).
+A test example to identify Dog's breed, "Dogs breed detector", as example for [DEEPaaS API](https://github.com/indigo-dc/DEEPaaS).
 
 Dogs breed detector is originally forked from [udacity/dogs-project](https://github.com/udacity/dog-project), dataset comes from [dog dataset](https://s3-us-west-1.amazonaws.com/udacity-aind/dog-project/dogImages.zip).
 
