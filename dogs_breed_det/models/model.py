@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright (c) 2017 - 2019 Karlsruhe Institute of Technology - Steinbuch Centre for Computing
+# This code is distributed under the MIT License
+# Please, see the LICENSE file
+#
 """
 Created on Mon Sep  3 21:29:57 2018
 
-@author: valentin
+@author: valentin.kozlov
 """
 
 import os
@@ -66,6 +71,7 @@ def get_metadata():
         'Author': None,
         'Author-email': None,
         'License': None,
+        'Train-Args': cfg.train_args
     }
 
     for line in pkg.get_metadata_lines("PKG-INFO"):
