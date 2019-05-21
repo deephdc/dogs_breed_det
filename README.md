@@ -5,6 +5,8 @@ Dog's breed detector
 
 A test example to identify Dog's breed, "Dogs breed detector", as example for [DEEPaaS API](https://github.com/indigo-dc/DEEPaaS).
 
+DEEP Open Catalog entry: [DEEP Open Catalog](https://marketplace.deep-hybrid-datacloud.eu/modules/deep-oc-dogs-breed-detection.html)
+
 Dogs breed detector is originally forked from [udacity/dogs-project](https://github.com/udacity/dog-project), dataset comes from [dog dataset](https://s3-us-west-1.amazonaws.com/udacity-aind/dog-project/dogImages.zip).
 
 The project applies Transfer learning for dog's breed identification, implemented with Tensorflow and Keras:
