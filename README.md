@@ -1,7 +1,7 @@
 Dog's breed detector
 ==============================
 
-[![Build Status](https://jenkins.indigo-datacloud.eu:8080/buildStatus/icon?job=Pipeline-as-code/DEEP-OC-org/dogs_breed_det/master)](https://jenkins.indigo-datacloud.eu:8080/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master)
+[![Build Status](https://jenkins.indigo-datacloud.eu/buildStatus/icon?job=Pipeline-as-code/DEEP-OC-org/dogs_breed_det/master)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master)
 
 A test example to identify Dog's breed, "Dogs breed detector", as example for [DEEPaaS API](https://github.com/indigo-dc/DEEPaaS).
 
