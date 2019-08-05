@@ -50,7 +50,7 @@ elif [ $# -ge 3 ]; then
 fi
 
 ### Since PORT can be re-defined, set SERVICE_FLAGS here: ###
-SERVICE_FLAGS="--log_file=${DEEPAAS_LOG} --openwhisk-detect --listen-ip=0.0.0.0 --listen-port=${DEEPAAS_PORT}"
+SERVICE_FLAGS="--log-file=${DEEPAAS_LOG} --openwhisk-detect --listen-ip=0.0.0.0 --listen-port=${DEEPAAS_PORT}"
 
 ##### RUN THE SCRIPT #####
 ### collect sysinfo
@@ -70,18 +70,18 @@ else
 fi
 
 # After collecting sysinfo, start the service
-if [ -x $SERVICE_CMD ]; then
+if [ -x $(which $SERVICE_CMD) ]; then
     SERVICE_CMD="${SERVICE_CMD} ${SERVICE_FLAGS}"
     echo "[INFO] Starting the service as:"
     echo "${SERVICE_CMD}"
     $SERVICE_CMD &
 fi
 
+# delay for 60s
+sleep 60s
 # Attempt to 'continuously' upload deepaas log file
 if [ -x $(which rclone) ]; then
     if [ -f $DEEPAAS_LOG ]; then
-        # delay for 60s
-        sleep 60s
         echo "[INFO] Now upload deepaas log file to remote share..."
         rclone copy $DEEPAAS_LOG $REMOTE_DIR
         # check modification time of deepaas log file
@@ -89,14 +89,14 @@ if [ -x $(which rclone) ]; then
         # infinite loop
         while :
         do
+            # check the modification time every 30s
+            sleep 30s
             mnow=$(stat -c %Y $DEEPAAS_LOG)
             # if modification time of deepaas log file changed -> upload
             if [ "$mlast" != "$mnow" ]; then
                 rclone copy $DEEPAAS_LOG $REMOTE_DIR
                 mlast=$mnow
             fi
-            # check the modification time every 30s
-            sleep 30s
         done
     else
         echo "[INFO] $DEEPAAS_LOG not found!"
