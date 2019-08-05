@@ -15,7 +15,7 @@ DATENOW=$(date +%y%m%d_%H%M%S)
 SCRIPT_PATH="$( cd $(dirname $0) ; pwd -P )"
 
 ### user defined default params
-REMOTE_DIR="rshare:/Datasets/"
+REMOTE_DIR="rshare:/Logs/"
 # Service to run
 DEEPAAS_PORT=5000
 DEEPAAS_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}-deepaas_log.txt"
@@ -27,7 +27,7 @@ SYSINFO_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}_sysinfo_log.txt"
 
 ### Usage message (params can be re-defined) ###
 USAGEMESSAGE="Usage: sh $0 <options> ; where <options> are: \n
-	--remote_dir \t\t Remote directory to store logs, e.g. rshare:/Datasets/ \n
+	--remote_dir \t\t Remote directory to store logs, e.g. rshare:/Logs/ \n
 	--deepaas_port \t DEEPaaS port (default 5000) \n"
 
 ### Parse script flags ###
