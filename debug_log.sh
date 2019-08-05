@@ -23,7 +23,7 @@ SERVICE_CMD="deepaas-run"
 
 ### settings for debug_sysinfo.sh
 SYSINFO_CMD="${SCRIPT_PATH}/debug_sysinfo.sh"
-SYSINFO_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}_sysinfo_log.txt"
+SYSINFO_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}-sysinfo_log.txt"
 
 ### Usage message (params can be re-defined) ###
 USAGEMESSAGE="Usage: sh $0 <options> ; where <options> are: \n
