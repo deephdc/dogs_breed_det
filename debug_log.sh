@@ -27,7 +27,7 @@ SYSINFO_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}_sysinfo.log"
 
 ### Usage message (params can be re-defined) ###
 USAGEMESSAGE="Usage: sh $0 <options> ; where <options> are: \n
-	--remote_dir \t Remote directory to store logs, e.g. rshare:/Datasets/ \n
+	--remote_dir \t\t Remote directory to store logs, e.g. rshare:/Datasets/ \n
 	--deepaas_port \t DEEPaaS port (default 5000) \n"
 
 ### Parse script flags ###
