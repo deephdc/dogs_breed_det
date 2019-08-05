@@ -18,12 +18,12 @@ SCRIPT_PATH="$( cd $(dirname $0) ; pwd -P )"
 REMOTE_DIR="rshare:/Datasets/"
 # Service to run
 DEEPAAS_PORT=5000
-DEEPAAS_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}-debug_deepaas.log"
+DEEPAAS_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}-deepaas_log.txt"
 SERVICE_CMD="deepaas-run"
 
 ### settings for debug_sysinfo.sh
 SYSINFO_CMD="${SCRIPT_PATH}/debug_sysinfo.sh"
-SYSINFO_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}_sysinfo.log"
+SYSINFO_LOG="${SCRIPT_PATH}/${DATENOW}_${HOSTNAME}_sysinfo_log.txt"
 
 ### Usage message (params can be re-defined) ###
 USAGEMESSAGE="Usage: sh $0 <options> ; where <options> are: \n
