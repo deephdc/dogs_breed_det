@@ -12,7 +12,7 @@
 DATENOW=$(date +%y%m%d_%H%M%S)
 # Script full path. The following is taken from
 # https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself/4774063
-SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
+SCRIPT_PATH="$( cd $(dirname $0) ; pwd -P )"
 
 ### user defined default params
 REMOTE_DIR="rshare:/Datasets/"
