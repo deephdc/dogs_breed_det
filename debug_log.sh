@@ -89,14 +89,14 @@ if [ -x $(which rclone) ]; then
         # infinite loop
         while :
         do
-            # check the modification time every 30s
-            sleep 30s
             mnow=$(stat -c %Y $DEEPAAS_LOG)
             # if modification time of deepaas log file changed -> upload
             if [ "$mlast" != "$mnow" ]; then
                 rclone copy $DEEPAAS_LOG $REMOTE_DIR
                 mlast=$mnow
             fi
+            # check the modification time every 30s
+            sleep 30s
         done
     else
         echo "[INFO] $DEEPAAS_LOG not found!"
