@@ -11,6 +11,7 @@ Created on Mon Sep  3 21:29:57 2018
 """
 
 import os
+import io
 import time
 import yaml
 import keras
@@ -18,6 +19,7 @@ import tempfile
 import argparse
 import numpy as np
 import pkg_resources
+import deepaas as deepaas
 import dogs_breed_det.config as cfg
 import dogs_breed_det.run_info as rinfo
 import dogs_breed_det.dataset.data_utils as dutils
@@ -31,6 +33,8 @@ from keras import backend
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
+from pkg_resources import parse_version
+
 
 ## Authorization
 from flaat import Flaat
@@ -204,28 +208,46 @@ def predict_file(img_path, network='Resnet50'):
     return msg
 
 
-def predict_data(img, network='Resnet50'):
-    if not isinstance(img, list):
-        img = [img]
-
+def predict_data(*args, **kwargs):
+    deepaas_ver_cut = '0.4.0'
+    img = []
     filenames = []
 
-    for image in img:
-        f = tempfile.NamedTemporaryFile(delete=False)
-        f.write(image)
-        f.close()
-        filenames.append(f.name)
-        print("tmp file: ", f.name)
+    deepaas_ver = deepaas.__version__
+    print("[INFO] deepaas_version: %s" % deepaas_ver)    
+    if parse_version(deepaas_ver) > parse_version(deepaas_ver_cut):
+        print('[DEBUG] predict_file - args: %s' % args)
+        print('[DEBUG] predict_file - kwargs: %s' % kwargs)
+        for arg in args:
+            print("[DEBUG] arg: ", arg)
+            print("[DEBUG] type of arg: ", type(arg))
+            print("[DEBUG] files_type: ", (type(arg.files)))
+            filenames.append(arg.files)
+            network = yaml.safe_load(arg.network)
+    else:
+        img = args[0]
+        network='Resnet50'
+        if not isinstance(img, list):
+           img = [img]
+
+        for image in img:
+            f = tempfile.NamedTemporaryFile(delete=False)
+            f.write(image)
+            f.close()
+            filenames.append(f.name)
+            print("tmp file: ", f.name)
 
     prediction = []
     try:
         for imgfile in filenames:
             prediction.append(predict_file(imgfile, network))
+            print("image: ", imgfile) #, os.path.realpath(imgfile)))
     except Exception as e:
         raise e
     finally:
-        for imgfile in filenames:
-            os.remove(imgfile)
+        if parse_version(deepaas_ver) <= parse_version(deepaas_ver_cut):
+            for imgfile in filenames:
+                os.remove(imgfile)
 
     return prediction
 
@@ -350,6 +372,19 @@ def get_train_args():
         print(val['default'], type(val['default']))
 
     return train_args
+    
+# !!! deepaas>=0.5.0 calls get_test_args() to get args for 'predict'
+def get_test_args():
+    predict_args = cfg.predict_args
+
+    # convert default values and possible 'choices' into strings
+    for key, val in predict_args.items():
+        val['default'] = str(val['default'])  # yaml.safe_dump(val['default']) #json.dumps(val['default'])
+        if 'choices' in val:
+            val['choices'] = [str(item) for item in val['choices']]
+        print(val['default'], type(val['default']))
+
+    return predict_args
 
 # during development it might be practical 
 # to check your code from the command line

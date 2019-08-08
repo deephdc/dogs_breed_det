@@ -43,4 +43,11 @@ train_args = { 'num_epochs': {'default': 10,
                             'required': False
                            },
 }
+predict_args = {'network':   {'default': 'Resnet50',
+                             'choices': ['Resnet50', 'InceptionV3', 'VGG16', 'VGG19'],
+                             'help': 'Neural model to use',
+                             'required': False
+                           },
+
+}
 
