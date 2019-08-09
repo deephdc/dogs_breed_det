@@ -11,7 +11,6 @@ Created on Mon Sep  3 21:29:57 2018
 """
 
 import os
-import io
 import time
 import yaml
 import keras
@@ -33,7 +32,6 @@ from keras import backend
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
-from pkg_resources import parse_version
 
 
 ## Authorization
@@ -159,25 +157,28 @@ def predict_file(img_path, network='Resnet50'):
     # check if the weights file exists locally. if not -> try to download
     status_weights, _ = dutils.maybe_download_data(data_dir='/models',
                                                    data_file=weights_file)
-    
-    dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
-    # check if the labels file exists locally. if not -> try to download
-    status_weights, _ = dutils.maybe_download_data(data_dir='/data',
-                                                   data_file=dog_names_file)
-                                                   
 
     # attempt to download default weights file for Resnet50                                                   
     if not status_weights and network=='Resnet50':
-        print("[INFO] Trying to download weights and labels from the public link")
+        print("[INFO] Trying to download weights from the public link")
         url_weights = cfg.Dog_RemoteShare + weights_file
         status_weights, _ = dutils.url_download(
                                    url_path = url_weights, 
-                                   data_dir='/models',
+                                   data_dir=os.path.join(cfg.BASE_DIR,'models'),
                                    data_file=weights_file)
+                                   
+    dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
+    # check if the labels file exists locally. if not -> try to download
+    status_dog_names, _ = dutils.maybe_download_data(data_dir='/data',
+                                                   data_file=dog_names_file)
+
+    # attempt to download labels file                                                   
+    if not status_dog_names:
+        print("[INFO] Trying to download labels from the public link")
         url_dog_names = cfg.Dog_RemoteShare + dog_names_file
         status_weights, _ = dutils.url_download(
                                    url_path = url_dog_names, 
-                                   data_dir='/data',
+                                   data_dir=os.path.join(cfg.BASE_DIR,'data'),
                                    data_file=dog_names_file)                                   
 
     if status_weights:
@@ -203,19 +204,20 @@ def predict_file(img_path, network='Resnet50'):
 
         msg = mutils.format_prediction(dog_names_best, probs_best)
     else:
-        msg = "[ERROR] No weights file found! Please first train the model " + \
+        msg = "[ERROR, predict_file()] No weights file found! Please first train the model " + \
               "with the " + network + " network!"
     return msg
 
 
 def predict_data(*args, **kwargs):
-    deepaas_ver_cut = '0.4.0'
+    deepaas_ver_cut = pkg_resources.parse_version('0.4.0')
     img = []
     filenames = []
 
-    deepaas_ver = deepaas.__version__
-    print("[INFO] deepaas_version: %s" % deepaas_ver)    
-    if parse_version(deepaas_ver) > parse_version(deepaas_ver_cut):
+    deepaas_ver = pkg_resources.parse_version(deepaas.__version__)
+    
+    print("[INFO] deepaas_version: %s" % deepaas_ver)
+    if deepaas_ver > deepaas_ver_cut:
         print('[DEBUG] predict_file - args: %s' % args)
         print('[DEBUG] predict_file - kwargs: %s' % kwargs)
         for arg in args:
@@ -235,7 +237,7 @@ def predict_data(*args, **kwargs):
             f.write(image)
             f.close()
             filenames.append(f.name)
-            print("tmp file: ", f.name)
+            print("[DEBUG] tmp file: ", f.name)
 
     prediction = []
     try:
@@ -245,7 +247,7 @@ def predict_data(*args, **kwargs):
     except Exception as e:
         raise e
     finally:
-        if parse_version(deepaas_ver) <= parse_version(deepaas_ver_cut):
+        if deepaas_ver <= deepaas_ver_cut:
             for imgfile in filenames:
                 os.remove(imgfile)
 

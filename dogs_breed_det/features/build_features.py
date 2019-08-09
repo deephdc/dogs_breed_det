@@ -36,6 +36,7 @@ def build_features(data_type, network='Resnet50'):
 
     data_dir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, data_type)
     img_files = dutils.load_data_files(data_dir)
+    print("[DEBUG] build_features, img_files: ", img_files[:5])
 
     bottleneck_features = nets[network](dutils.paths_to_tensor(img_files))
     bottleneck_path = set_features_file(data_type, network,
