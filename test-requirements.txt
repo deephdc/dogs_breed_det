@@ -1,4 +1,5 @@
 flake8
-pylint
 tensorflow>=1.6.0
 pydot-ng
+stestr
+unittest
