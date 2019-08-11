@@ -104,8 +104,8 @@ def url_download(url_path = cfg.Dog_RemoteShare,
     file_path = os.path.join(data_dir, data_file)
 
     def _progress(count, block_size, total_size):
-        sys.stdout.write('\r>> Downloading %s %.1f%%' % (data_file,
-                        float(count * block_size) / float(total_size) * 100.0))
+        sys.stdout.write('\r>> Downloading %s %.1f' % (data_file,
+                        float(count * block_size)))
         sys.stdout.flush()
 
     file_path, _ = urllib.request.urlretrieve(url_path, file_path, _progress)

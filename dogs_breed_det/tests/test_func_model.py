@@ -10,39 +10,42 @@ Created on Sat Aug 10 08:43:00 2019
 @author: vykozlov
 """
 import os
+import unittest
 import dogs_breed_det.config as cfg
-import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.models.model as dog_model
 
 from keras.utils import plot_model
 
-def test_predict_file():
-    """
-    Functional test of predict_file
-    Also visualizes the neural network
-    """
-    img_path = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/inputs/St_Bernard_wiki_3.jpg')
-    network_image = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/tmp/neural_net.png')
-    network = 'Resnet50'
-    prob_cut = 0.5
+class TestModelFunc(unittest.TestCase):
+    def test_predict_file(self):
+        """
+        Functional test of predict_file
+        Also visualizes the neural network
+        """
+        img_path = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/inputs/St_Bernard_wiki_3.jpg')
+        network_image = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/tmp/neural_net.png')
+        network = 'Resnet50'
+        prob_cut = 0.5
       
-    pred_result = dog_model.predict_file(img_path, network)
+        pred_result = dog_model.predict_file(img_path, network)
 
-    prob = 0.0
-    for pred in pred_result["predictions"]:
-        print("prob: ", pred["probability"])
-        print("label: ", pred["label"])
-        label = pred["label"]
-        if label == 'Saint_bernard':
-            prob = pred["probability"]
+        prob = 0.0
+        for pred in pred_result["predictions"]:
+            print("prob: ", pred["probability"])
+            print("label: ", pred["label"])
+            label = pred["label"]
+            if label == 'Saint_bernard':
+                prob = pred["probability"]
     
-    model = dog_model.build_model(network)
+        model = dog_model.build_model(network)
 
-    plot_model(model, to_file=network_image)
-    # print model summary
-    model.summary()
-    print("prob Saint_bernard: ", prob)
+        plot_model(model, to_file=network_image)
+        # print model summary
+        model.summary()
+        print("prob Saint_bernard: ", prob)
     
-    assert prob > prob_cut
+        assert prob > prob_cut
 
-#test_predict_file()
+if __name__ == '__main__':
+    unittest.main()
+    #test_predict_file()
