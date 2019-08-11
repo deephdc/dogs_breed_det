@@ -30,13 +30,16 @@ def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
     elif cmd == 'check':
         command = (['rclone', 'check', src_path, dest_dir])
     
-    if get_output:
-        result = subprocess.Popen(command, 
-                                  stdout=subprocess.PIPE, 
-                                  stderr=subprocess.PIPE)
-    else:
-        result = subprocess.Popen(command, stderr=subprocess.PIPE)
-    output, error = result.communicate()
+    try:
+        if get_output:
+            result = subprocess.Popen(command, 
+                                      stdout=subprocess.PIPE, 
+                                      stderr=subprocess.PIPE)
+        else:
+            result = subprocess.Popen(command, stderr=subprocess.PIPE)
+            output, error = result.communicate()
+    except OSError as e:
+        output, error = None, e
     return output, error
 
 
