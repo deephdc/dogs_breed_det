@@ -2,7 +2,6 @@
 pathlib2
 
 Sphinx
-coverage
 python-dotenv>=0.5.1
 
 opencv-python==3.2.0.6
