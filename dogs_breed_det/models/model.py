@@ -91,7 +91,7 @@ def prepare_data(network='Resnet50'):
     mdata.prepare_data(network)
 
 
-def build_model(network='Resnet50'):
+def build_model(network='Resnet50', num_classes=100):
     """
     Build network. Possible nets:
     Resnet50, VGG19, VGG16, InceptionV3, Xception
@@ -106,9 +106,6 @@ def build_model(network='Resnet50'):
     }
 
     #train_net = bfeatures.load_features('train', network)
-    dog_names = dutils.dog_names_load()
-    nclasses = len(dog_names)
-    print('[INFO] Found %d classes (dogs breeds)' % nclasses)
 
     net_model = Sequential()
     # add a global average pooling layer    
@@ -118,7 +115,7 @@ def build_model(network='Resnet50'):
     fc_layers = int(features_shape[network][2]/2.)
     net_model.add(Dense(fc_layers, activation='relu'))
     # add a classification layer    
-    net_model.add(Dense(nclasses, activation='softmax'))
+    net_model.add(Dense(num_classes, activation='softmax'))
 
     print("__" + network+"__: ")
     net_model.summary()
@@ -182,13 +179,14 @@ def predict_file(img_path, network='Resnet50'):
                                    data_file=dog_names_file)                                   
 
     if status_weights:
-        net_model = build_model(network)
+        dog_names  = dutils.dog_names_load()
+        net_model = build_model(network, len(dog_names))
         net_model.load_weights(saved_weights_path)
 
         # extract bottleneck features
         bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
         print("[INFO] Bottleneck feature size: %s" % str(bottleneck_feature.shape))
-        dog_names  = dutils.dog_names_load()
+
         # obtain predicted vector
         predicted_vector = net_model.predict(bottleneck_feature)
         print("[INFO] Sum: %f" % np.sum(predicted_vector))
@@ -323,7 +321,11 @@ def train(train_args):
     # clear possible pre-existing sessions. important!
     backend.clear_session()
 
-    net_model = build_model(network)
+    dog_names = dutils.dog_names_load()
+    num_dog_breeds = len(dog_names)
+    print('[INFO] Found %d classes (dogs breeds)' % num_dog_breeds)
+
+    net_model = build_model(network, num_dog_breeds)
 
     time_callback = TimeHistory()        
     net_model.fit(train_net, train_targets, 
