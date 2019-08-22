@@ -28,7 +28,7 @@ machine_info = { 'cpu': '',
 #            },
 #...
 #}
-train_args = { 'num_epochs': {'default': 10,
+train_args = { 'num_epochs': {'default': 1,
                               'help': 'Number of epochs to train on',
                               'required': False
                              },

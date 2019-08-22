@@ -23,6 +23,7 @@ def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
     """ Function
         rclone calls
     """
+    
     if cmd == 'copy':
         command = (['rclone', 'copy', '--progress', src_path, dest_dir])
     elif cmd == 'ls':
@@ -37,7 +38,8 @@ def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
                                       stderr=subprocess.PIPE)
         else:
             result = subprocess.Popen(command, stderr=subprocess.PIPE)
-            output, error = result.communicate()
+        
+        output, error = result.communicate()
     except OSError as e:
         output, error = None, e
     return output, error

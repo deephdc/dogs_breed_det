@@ -25,10 +25,14 @@ import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
+from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D
+from keras.layers.normalization import BatchNormalization
+from keras import regularizers
+
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
-from keras import backend
+from keras import backend as K
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
@@ -114,7 +118,17 @@ def build_model(network='Resnet50', num_classes=100):
     # add a fully-connected layer
     fc_layers = int(features_shape[network][2]/2.)
     net_model.add(Dense(fc_layers, activation='relu'))
-    # add a classification layer    
+    net_model.add(BatchNormalization())
+    #-net_model.add(Dense(fc_layers,
+    #-                    kernel_initializer='glorot_uniform',
+    #-                    kernel_regularizer=regularizers.l2(0.01),
+    #-                    bias_initializer='glorot_uniform',
+    #-                    bias_regularizer=regularizers.l2(0.01),
+    #-                    activation='relu'))
+    #-net_model.add(BatchNormalization(beta_initializer='glorot_uniform',
+    #-                                 beta_regularizer=regularizers.l2(0.01),
+    #-                                 gamma_regularizer=regularizers.l2(0.01)))
+    # add a classification layer
     net_model.add(Dense(num_classes, activation='softmax'))
 
     print("__" + network+"__: ")
@@ -143,7 +157,7 @@ def predict_file(img_path, network='Resnet50'):
     }
 
     # clear possible pre-existing sessions. IMPORTANT!
-    backend.clear_session()
+    K.clear_session()
 
     # check that all necessary data is there
     #prepare_data(network)
@@ -319,7 +333,7 @@ def train(train_args):
                                    verbose=1, save_best_only=True)
 
     # clear possible pre-existing sessions. important!
-    backend.clear_session()
+    K.clear_session()
 
     dog_names = dutils.dog_names_load()
     num_dog_breeds = len(dog_names)
@@ -327,11 +341,26 @@ def train(train_args):
 
     net_model = build_model(network, num_dog_breeds)
 
-    time_callback = TimeHistory()        
+    before = K.get_session().run(net_model.trainable_weights)
+    time_callback = TimeHistory()      
     net_model.fit(train_net, train_targets, 
                   validation_data=(valid_net, valid_targets),
                   epochs=num_epochs, batch_size=20, 
                   callbacks=[checkpointer, time_callback], verbose=1)
+    after = K.get_session().run(net_model.trainable_weights)
+    ii = 0
+    debug_here = True
+    for b, a in zip(before, after):
+        if debug_here:
+            print("[DEBUG] {} : ".format(net_model.trainable_weights[ii]))
+            ii += 1
+            if (b != a).any() and debug_here:
+                print(" * ok, training (output does not match)")
+            else:
+                print(" * !!! output is the same, not training? !!!")
+                print(" * Before: {} : ".format(b))
+                print("")
+                print(" * After: {} : ".format(a))
 
     mn = np.mean(time_callback.durations)
     std = np.std(time_callback.durations, ddof=1) if num_epochs > 1 else -1
