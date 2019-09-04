@@ -25,8 +25,9 @@ import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
+from keras import applications
 from keras.models import Model
-from keras.layers import Dense, GlobalAveragePooling2D
+from keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from keras.layers.normalization import BatchNormalization
 from keras import regularizers
 
@@ -109,27 +110,49 @@ def build_model(network='Resnet50', num_classes=100):
                       'Xception': [7, 7, 2048],
     }
 
-    #train_net = bfeatures.load_features('train', network)
-
+    ### 'Standard' implementation based on bottlenecks
+    #-train_net = bfeatures.load_features('train', network)
     net_model = Sequential()
     # add a global average pooling layer    
-    #net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
+    #-net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
     net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
     # add a fully-connected layer
     fc_layers = int(features_shape[network][2]/2.)
     net_model.add(Dense(fc_layers, activation='relu'))
     net_model.add(BatchNormalization())
-    #-net_model.add(Dense(fc_layers,
-    #-                    kernel_initializer='glorot_uniform',
-    #-                    kernel_regularizer=regularizers.l2(0.01),
-    #-                    bias_initializer='glorot_uniform',
-    #-                    bias_regularizer=regularizers.l2(0.01),
-    #-                    activation='relu'))
-    #-net_model.add(BatchNormalization(beta_initializer='glorot_uniform',
-    #-                                 beta_regularizer=regularizers.l2(0.01),
-    #-                                 gamma_regularizer=regularizers.l2(0.01)))
     # add a classification layer
     net_model.add(Dense(num_classes, activation='softmax'))
+    ###
+
+    ### EXPERIMENTAL! # build the full ResNet50 network
+    #base_model = applications.ResNet50(weights='imagenet', 
+    #                                   include_top=False,
+    #                                   input_shape=(224, 224, 3))
+    #print('Model loaded.')
+    #
+    # build a classifier model to put on top of the convolutional model
+    #top_model = Dropout(0.25)(base_model.output)
+    #top_model = GlobalAveragePooling2D()(base_model.output)
+    #top_model = Dense(128,
+    #                  kernel_initializer='glorot_uniform',
+    #                  kernel_regularizer=regularizers.l2(0.01),
+    #                  activation='relu')(top_model)
+    #top_model = Dropout(0.25)(top_model)
+    #top_model = BatchNormalization()(top_model)
+    #top_model = Dense(128, 
+    #                  kernel_initializer='glorot_uniform',
+    #                  kernel_regularizer=regularizers.l2(0.01),
+    #                  activation='relu')(top_model)
+    #top_model = BatchNormalization()(top_model)
+    ##top_model = Dropout(0.5)(top_model)
+    ##top_model = Flatten()(top_model)
+    #predictions = Dense(num_classes, activation='softmax')(top_model)
+    #
+    #for layer in base_model.layers:
+    #    layer.trainable = False    
+    #
+    #net_model = Model(inputs=base_model.input, outputs=predictions)
+    ### END OF EXPERIMENTAL!
 
     print("__" + network+"__: ")
     net_model.summary()

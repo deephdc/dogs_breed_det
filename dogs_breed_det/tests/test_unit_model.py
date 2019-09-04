@@ -23,14 +23,18 @@ class TestModelMethods(unittest.TestCase):
         num_classes = 133
 
         train_tensor = np.random.normal(size=(2, 1, 1, 2048))
+        #train_tensor = np.random.normal(size=(2, 224, 224, 3))  # full ResNet 
         label_tensor = np.random.normal(size=(2, num_classes))
 
         model = dog_model.build_model(network, num_classes)
         print(model.trainable_weights)
 
         before = K.get_session().run(model.trainable_weights)
-        model.fit(train_tensor, label_tensor,
-                  epochs=1, batch_size=2, 
+        model.fit(train_tensor,
+                  label_tensor,
+                  epochs=1,
+                  # need batch_size>=2, e.g. for the case of BatchNormalization
+                  batch_size=2,
                   verbose=1)
         after = K.get_session().run(model.trainable_weights)
 
@@ -41,9 +45,9 @@ class TestModelMethods(unittest.TestCase):
                 print("[DEBUG] {} : ".format(model.trainable_weights[i]))
                 i += 1
                 if (b != a).any() and debug:
-                    print(" * ok, training (output does not match)")
+                    print(" * ok, training (values are updated)")
                 else:
-                    print(" * !!! output is the same, not training? !!!")
+                    print(" * !!! values didn't change, not training? !!!")
                     print(" * Before: {} : ".format(b))
                     print("")
                     print(" * After: {} : ".format(a))
