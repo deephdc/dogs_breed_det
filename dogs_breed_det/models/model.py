@@ -245,46 +245,53 @@ def predict_file(img_path, network='Resnet50'):
 
 
 def predict_data(*args, **kwargs):
-    deepaas_ver_cut = pkg_resources.parse_version('0.4.0')
-    img = []
-    filenames = []
-
-    deepaas_ver = pkg_resources.parse_version(deepaas.__version__)
+    """
+    Function to make prediction on an uploaded file
+    """
     
+    deepaas_ver_cut = pkg_resources.parse_version('0.5.0')
+    imgs = []
+    filenames = []
+    
+    deepaas_ver = pkg_resources.parse_version(deepaas.__version__)
     print("[INFO] deepaas_version: %s" % deepaas_ver)
-    if deepaas_ver > deepaas_ver_cut:
-        print('[DEBUG] predict_file - args: %s' % args)
-        print('[DEBUG] predict_file - kwargs: %s' % kwargs)
+    predict_debug = False
+    if predict_debug:
+        print('[DEBUG] predict_data - args: %s' % args)
+        print('[DEBUG] predict_data - kwargs: %s' % kwargs)
+    if deepaas_ver >= deepaas_ver_cut:
         for arg in args:
-            print("[DEBUG] arg: ", arg)
-            print("[DEBUG] type of arg: ", type(arg))
-            print("[DEBUG] files_type: ", (type(arg.files)))
-            filenames.append(arg.files)
+            imgs.append(arg['files'])
             network = yaml.safe_load(arg.network)
     else:
-        img = args[0]
+        imgs = args[0]
         network='Resnet50'
-        if not isinstance(img, list):
-           img = [img]
 
-        for image in img:
+    if not isinstance(imgs, list):
+        imgs = [imgs]
+            
+    for image in imgs:
+        if deepaas_ver >= deepaas_ver_cut:
+            f = open("/tmp/%s" % image.filename, "w+")
+            image.save(f.name)
+        else:
             f = tempfile.NamedTemporaryFile(delete=False)
             f.write(image)
-            f.close()
-            filenames.append(f.name)
-            print("[DEBUG] tmp file: ", f.name)
+        f.close()
+        filenames.append(f.name)
+        print("Stored tmp file at: {} \t Size: {}".format(f.name,
+        os.path.getsize(f.name)))
 
     prediction = []
     try:
         for imgfile in filenames:
             prediction.append(predict_file(imgfile, network))
-            print("image: ", imgfile) #, os.path.realpath(imgfile)))
+            print("image: ", imgfile) # os.path.realpath(imgfile)))
     except Exception as e:
         raise e
     finally:
-        if deepaas_ver <= deepaas_ver_cut:
-            for imgfile in filenames:
-                os.remove(imgfile)
+        for imgfile in filenames:
+            os.remove(imgfile)
 
     return prediction
 
