@@ -18,6 +18,25 @@ from keras import backend as K
 debug = True
 
 class TestModelMethods(unittest.TestCase):
+    def setUp(self):
+        self.meta = dog_model.get_metadata()
+        
+    def test_model_metadata_type(self):
+        """
+        Test that get_metadata() returns list
+        """
+        self.assertTrue(type(self.meta) is dict)
+        
+    def test_model_metadata_values(self):
+        """
+        Test that get_metadata() returns 
+        right values (subset)
+        """
+        self.assertEqual(self.meta['Name'].replace('-','').replace('_',''),
+                         'dogs_breed_det'.replace('-','').replace('_',''))
+        self.assertEqual(self.meta['Author'], 'V.Kozlov (KIT)')
+        self.assertEqual(self.meta['Author-email'], 'valentin.kozlov@kit.edu')
+
     def test_model_variables(self):
         network = 'Resnet50'
         num_classes = 133

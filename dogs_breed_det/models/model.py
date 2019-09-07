@@ -83,7 +83,7 @@ def get_metadata():
 
     for line in pkg.get_metadata_lines("PKG-INFO"):
         for par in meta:
-            if line.startswith(par):
+            if line.startswith(par+":"):
                 _, value = line.split(": ", 1)
                 meta[par] = value
 
@@ -255,13 +255,17 @@ def predict_data(*args, **kwargs):
     
     deepaas_ver = pkg_resources.parse_version(deepaas.__version__)
     print("[INFO] deepaas_version: %s" % deepaas_ver)
-    predict_debug = False
+    predict_debug = True
     if predict_debug:
         print('[DEBUG] predict_data - args: %s' % args)
         print('[DEBUG] predict_data - kwargs: %s' % kwargs)
     if deepaas_ver >= deepaas_ver_cut:
         for arg in args:
-            imgs.append(arg['files'])
+            files = arg['files']
+            if not isinstance(files, list):
+                files = [files]
+            for f in files:
+                imgs.append(f)
             network = yaml.safe_load(arg.network)
     else:
         imgs = args[0]
