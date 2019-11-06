@@ -13,6 +13,7 @@ import os
 import numpy as np
 import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
+import dogs_breed_det.models.model_utils as mutils
 
 import unittest
 
@@ -21,11 +22,11 @@ class TestDatasetMethods(unittest.TestCase):
     def test_url_download(self):
         url_path = cfg.Dog_RemoteShare
         data_dir = os.path.join(cfg.BASE_DIR, 'dogs_breed_det/tests/tmp')
-        data_file = 'weights.best.ResNet50.hdf5'
+        weights_file = mutils.build_weights_filename('Resnet50')
     
-        dist_exist, error_out = dutils.url_download(url_path, data_dir, data_file)
+        dist_exist, error_out = dutils.url_download(url_path, data_dir, weights_file)
         if dist_exist:
-            os.remove(os.path.join(data_dir, data_file))
+            os.remove(os.path.join(data_dir, weights_file))
     
         assert dist_exist
 

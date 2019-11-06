@@ -1,5 +1,12 @@
 import requests
+import dogs_breed_det.config as cfg
 
+def build_weights_filename(network):
+    '''
+    Builds filename for the weights file
+    '''
+    weights_filename = cfg.Dog_WeightsPattern.replace('NETWORK', network)
+    return weights_filename
 
 def format_prediction(labels, probabilities):
     d = {

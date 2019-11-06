@@ -185,7 +185,7 @@ def predict_file(img_path, network='Resnet50'):
     # check that all necessary data is there
     #prepare_data(network)
 
-    weights_file = 'weights.best.' + network + '.hdf5'
+    weights_file = mutils.build_weights_filename(network)
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file) 
 
     # check if the weights file exists locally. if not -> try to download
@@ -362,7 +362,7 @@ def train(train_args):
         }
 
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
-                                     'weights.best.' + network + '.hdf5')
+                                      mutils.build_weights_filename(network))
     checkpointer = ModelCheckpoint(filepath=saved_weights_path, 
                                    verbose=1, save_best_only=True)
 
