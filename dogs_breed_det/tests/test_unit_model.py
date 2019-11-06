@@ -11,6 +11,7 @@ Created on Sat Aug 10 08:47:51 2019
 """
 import unittest
 import numpy as np
+import tensorflow as tf
 import dogs_breed_det.models.model as dog_model
 
 from keras import backend as K
@@ -20,6 +21,7 @@ debug = True
 class TestModelMethods(unittest.TestCase):
     def setUp(self):
         self.meta = dog_model.get_metadata()
+        print("[INFO] TensorFlow version: {}".format(tf.__version__))
         
     def test_model_metadata_type(self):
         """

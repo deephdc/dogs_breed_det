@@ -14,7 +14,7 @@ import unittest
 import dogs_breed_det.config as cfg
 import dogs_breed_det.models.model as dog_model
 
-from keras.utils import plot_model
+#from keras.utils import plot_model
 
 class TestModelFunc(unittest.TestCase):
     def test_predict_file(self):
