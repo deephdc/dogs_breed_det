@@ -18,6 +18,17 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###
 
+def byte2str(str_in):
+    '''
+    Simple function to decode a byte string (str_in).
+    In case of a normal string, return is unchanged
+    '''
+    try:
+        str_in = str_in.decode()
+    except (UnicodeDecodeError, AttributeError):
+        pass
+    
+    return str_in    
 
 def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
     """ Function
@@ -42,6 +53,10 @@ def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
         output, error = result.communicate()
     except OSError as e:
         output, error = None, e
+    
+    output = byte2str(output)
+    error = byte2str(error)
+    
     return output, error
 
 
@@ -162,7 +177,7 @@ def maybe_download_data(remote_storage=cfg.Dog_RemoteStorage,
             if not os.path.exists(sub_dir):
                 os.makedirs(sub_dir)
         status, error_out = rclone_copy(remote_url, local_dir)
-        print("[DEBUG, maybe_download_data]: ", status, error_out)
+        #print("[DEBUG, maybe_download_data]: ", status, error_out)
     else:
         status = True
         error_out = None
