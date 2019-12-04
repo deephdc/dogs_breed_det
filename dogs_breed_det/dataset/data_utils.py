@@ -23,11 +23,23 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###
 
+def byte2str(str_in):
+    '''
+    Simple function to decode a byte string (str_in).
+    In case of a normal string, return is unchanged
+    '''
+    try:
+        str_in = str_in.decode()
+    except (UnicodeDecodeError, AttributeError):
+        pass
+    
+    return str_in    
 
 def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
     """ Function
         rclone calls
     """
+    
     if cmd == 'copy':
         command = (['rclone', 'copy', '--progress', src_path, dest_dir])
     elif cmd == 'ls':
@@ -35,13 +47,21 @@ def rclone_call(src_path, dest_dir, cmd='copy', get_output=False):
     elif cmd == 'check':
         command = (['rclone', 'check', src_path, dest_dir])
     
-    if get_output:
-        result = subprocess.Popen(command, 
-                                  stdout=subprocess.PIPE, 
-                                  stderr=subprocess.PIPE)
-    else:
-        result = subprocess.Popen(command, stderr=subprocess.PIPE)
-    output, error = result.communicate()
+    try:
+        if get_output:
+            result = subprocess.Popen(command, 
+                                      stdout=subprocess.PIPE, 
+                                      stderr=subprocess.PIPE)
+        else:
+            result = subprocess.Popen(command, stderr=subprocess.PIPE)
+        
+        output, error = result.communicate()
+    except OSError as e:
+        output, error = None, e
+    
+    output = byte2str(output)
+    error = byte2str(error)
+    
     return output, error
 
 
@@ -66,7 +86,7 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
     # check first if we find src_path
     output, error = rclone_call(src_path, dest_dir, cmd='ls')
     if error:
-        print('[ERROR] %s (src):\n%s' % (src_path, error))
+        print('[ERROR, rclone_copy()] %s (src):\n%s' % (src_path, error))
         error_out = error
         dest_exist = False
     else:
@@ -84,33 +104,36 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
                 print('[INFO] File %s copied. Check if (src) and (dest) really match..' % (dest_file))
                 output, error = rclone_call(src_dir, dest_dir, cmd='check')
                 if 'ERROR : ' + dest_file in error:
-                    print('[ERROR] %s (src) and %s (dest) do not match!' 
+                    print('[ERROR, rclone_copy()] %s (src) and %s (dest) do not match!' 
                           % (src_path, dest_path))
                     error_out = 'Copy failed: ' + src_path + ' (src) and ' + \
                                  dest_path + ' (dest) do not match'
                     dest_exist = False     
         else:
-            print('[ERROR] %s (src):\n%s' % (dest_path, error))
+            print('[ERROR, rclone_copy()] %s (src):\n%s' % (dest_path, error))
             error_out = error
             dest_exist = False
 
     return dest_exist, error_out
 
-def url_download(url_path, data_dir, data_file):
-
-    #join doesn't work if data_dir starts with '/'!
-    data_dir = data_dir.lstrip('/')
-    data_dir = data_dir.rstrip('/')
+def url_download(url_path = cfg.Dog_RemoteShare,
+                 data_dir = os.path.join(cfg.BASE_DIR, 'models'),
+                 data_file = 'weights.best.ResNet50.hdf5'):
+    """ Function to copy a file from URL
+    :param url_path: remote URL to download
+    :param data_dir: full path to where for storing the file
+    :param data_file: file name into which for saving the remote file
+    :return: if file is downloaded (=local version exists), possible error
+    """
     
-    file_path = os.path.join(cfg.BASE_DIR, data_dir, data_file)
+    file_path = os.path.join(data_dir, data_file)
 
     def _progress(count, block_size, total_size):
-        sys.stdout.write('\r>> Downloading %s %.1f%%' % (data_file,
-                        float(count * block_size) / float(total_size) * 100.0))
+        sys.stdout.write('\r>> Downloading %s %.1f' % (data_file,
+                        float(count * block_size)))
         sys.stdout.flush()
 
     file_path, _ = urllib.request.urlretrieve(url_path, file_path, _progress)
-    print()
     statinfo = os.stat(file_path)
     
     if os.path.exists(file_path):
@@ -120,7 +143,7 @@ def url_download(url_path, data_dir, data_file):
         error_out = None
     else:
         dest_exist = False
-        error_out = '[ERROR] Failed to download ' + data_file + \
+        error_out = '[ERROR, url_download()] Failed to download ' + data_file + \
                     ' from ' + url_path
         
     return dest_exist, error_out
@@ -159,6 +182,7 @@ def maybe_download_data(remote_storage=cfg.Dog_RemoteStorage,
             if not os.path.exists(sub_dir):
                 os.makedirs(sub_dir)
         status, error_out = rclone_copy(remote_url, local_dir)
+        #print("[DEBUG, maybe_download_data]: ", status, error_out)
     else:
         status = True
         error_out = None
@@ -252,12 +276,15 @@ def load_targets(data_type):
     return targets
 
 
-def dog_names_create():
+def dog_names_create(dataImagesTrain=os.path.join(cfg.BASE_DIR,
+                                                  'data', cfg.Dog_DataDir, 
+                                                  'train','*'),
+                     dog_names_path=cfg.Dog_LabelsFile):
     """
     Function to create dog_names file based on sub-directories in 'train'.
     :return:  list of string-valued dog breed names for translating labels
     """
-    dataImagesTrain = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, 'train','*')
+    
     #dog_names = [os.path.basename(os.path.normpath(item))[4:] for item in sorted(glob(dataImagesTrain))]
     
     # attempt to identify 'numbered' directories and 'not numbered'
@@ -280,7 +307,7 @@ def dog_names_create():
     print('[INFO] Creating %s file with %d classes (dogs breeds)' % 
           (cfg.Dog_LabelsFile, len(dog_names)))
 
-    with open(cfg.Dog_LabelsFile, 'w') as listfile:
+    with open(dog_names_path, 'w') as listfile:
         for item in dog_names:
             listfile.write("%s\n" % item)
     
@@ -291,14 +318,13 @@ def dog_names_create():
     return dog_names
 
 
-def dog_names_load():
+def dog_names_load(labels_path=cfg.Dog_LabelsFile):
     """
     Function to return dog names read from the file.
-    Also creates .txt file with the names
     :return:  list of string-valued dog breed names for translating labels
     """
     # we expect that file already exists
-    with open(cfg.Dog_LabelsFile, 'r') as listfile:
+    with open(labels_path, 'r') as listfile:
         dog_names = [ line.rstrip('\n') for line in listfile ]
 
     return dog_names

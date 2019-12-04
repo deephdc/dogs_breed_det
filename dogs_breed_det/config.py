@@ -10,6 +10,7 @@ BASE_DIR = path.dirname(path.normpath(path.dirname(__file__)))
 Dog_RemoteStorage = 'rshare:/Datasets/dogs_breed/'
 Dog_RemoteShare = 'https://nc.deep-hybrid-datacloud.eu/s/D7DLWcDsRoQmRMN/download?path=%2F&files='
 Dog_DataDir = 'dogImages'
+Dog_WeightsPattern = 'weights.best.NETWORK.3layers.hdf5'
 Dog_LabelsFile = path.join(BASE_DIR, 'data','dog_names.txt')
 
 
@@ -28,7 +29,7 @@ machine_info = { 'cpu': '',
 #            },
 #...
 #}
-train_args = { 'num_epochs': {'default': 10,
+train_args = { 'num_epochs': {'default': 1,
                               'help': 'Number of epochs to train on',
                               'required': False
                              },
@@ -42,5 +43,12 @@ train_args = { 'num_epochs': {'default': 10,
                             'help': 'Print information about the run (e.g. cpu, gpu, memory)',
                             'required': False
                            },
+}
+predict_args = {'network':   {'default': 'Resnet50',
+                             'choices': ['Resnet50', 'InceptionV3', 'VGG16', 'VGG19'],
+                             'help': 'Neural model to use',
+                             'required': False
+                           },
+
 }
 

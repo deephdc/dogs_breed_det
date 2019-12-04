@@ -1,0 +1,5 @@
+Affenpinscher
+Beagle
+Collie
+Mastiff
+Saint_bernard

@@ -18,19 +18,26 @@ import tempfile
 import argparse
 import numpy as np
 import pkg_resources
+import deepaas as deepaas
 import dogs_breed_det.config as cfg
 import dogs_breed_det.run_info as rinfo
 import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
-from keras.layers import Dense, GlobalAveragePooling2D
+from keras import applications
+from keras.models import Model
+from keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from keras.layers.normalization import BatchNormalization
+from keras import regularizers
+
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
-from keras import backend
+from keras import backend as K
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
+
 
 ## Authorization
 from flaat import Flaat
@@ -71,11 +78,12 @@ def get_metadata():
         'Author': None,
         'Author-email': None,
         'License': None,
+        'Train-Args': cfg.train_args
     }
 
     for line in pkg.get_metadata_lines("PKG-INFO"):
         for par in meta:
-            if line.startswith(par):
+            if line.startswith(par+":"):
                 _, value = line.split(": ", 1)
                 meta[par] = value
 
@@ -88,7 +96,7 @@ def prepare_data(network='Resnet50'):
     mdata.prepare_data(network)
 
 
-def build_model(network='Resnet50'):
+def build_model(network='Resnet50', num_classes=100):
     """
     Build network. Possible nets:
     Resnet50, VGG19, VGG16, InceptionV3, Xception
@@ -102,20 +110,49 @@ def build_model(network='Resnet50'):
                       'Xception': [7, 7, 2048],
     }
 
-    #train_net = bfeatures.load_features('train', network)
-    dog_names = dutils.dog_names_load()
-    nclasses = len(dog_names)
-    print('[INFO] Found %d classes (dogs breeds)' % nclasses)
-
+    ### 'Standard' implementation based on bottlenecks
+    #-train_net = bfeatures.load_features('train', network)
     net_model = Sequential()
     # add a global average pooling layer    
-    #net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
+    #-net_model.add(GlobalAveragePooling2D(input_shape=train_net.shape[1:]))
     net_model.add(GlobalAveragePooling2D(input_shape=features_shape[network]))
     # add a fully-connected layer
     fc_layers = int(features_shape[network][2]/2.)
     net_model.add(Dense(fc_layers, activation='relu'))
-    # add a classification layer    
-    net_model.add(Dense(nclasses, activation='softmax'))
+    net_model.add(BatchNormalization())
+    # add a classification layer
+    net_model.add(Dense(num_classes, activation='softmax'))
+    ###
+
+    ### EXPERIMENTAL! # build the full ResNet50 network
+    #base_model = applications.ResNet50(weights='imagenet', 
+    #                                   include_top=False,
+    #                                   input_shape=(224, 224, 3))
+    #print('Model loaded.')
+    #
+    # build a classifier model to put on top of the convolutional model
+    #top_model = Dropout(0.25)(base_model.output)
+    #top_model = GlobalAveragePooling2D()(base_model.output)
+    #top_model = Dense(128,
+    #                  kernel_initializer='glorot_uniform',
+    #                  kernel_regularizer=regularizers.l2(0.01),
+    #                  activation='relu')(top_model)
+    #top_model = Dropout(0.25)(top_model)
+    #top_model = BatchNormalization()(top_model)
+    #top_model = Dense(128, 
+    #                  kernel_initializer='glorot_uniform',
+    #                  kernel_regularizer=regularizers.l2(0.01),
+    #                  activation='relu')(top_model)
+    #top_model = BatchNormalization()(top_model)
+    ##top_model = Dropout(0.5)(top_model)
+    ##top_model = Flatten()(top_model)
+    #predictions = Dense(num_classes, activation='softmax')(top_model)
+    #
+    #for layer in base_model.layers:
+    #    layer.trainable = False    
+    #
+    #net_model = Model(inputs=base_model.input, outputs=predictions)
+    ### END OF EXPERIMENTAL!
 
     print("__" + network+"__: ")
     net_model.summary()
@@ -143,46 +180,50 @@ def predict_file(img_path, network='Resnet50'):
     }
 
     # clear possible pre-existing sessions. IMPORTANT!
-    backend.clear_session()
+    K.clear_session()
 
     # check that all necessary data is there
     #prepare_data(network)
 
-    weights_file = 'weights.best.' + network + '.hdf5'
+    weights_file = mutils.build_weights_filename(network)
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file) 
 
     # check if the weights file exists locally. if not -> try to download
     status_weights, _ = dutils.maybe_download_data(data_dir='/models',
                                                    data_file=weights_file)
-    
-    dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
-    # check if the labels file exists locally. if not -> try to download
-    status_weights, _ = dutils.maybe_download_data(data_dir='/data',
-                                                   data_file=dog_names_file)
-                                                   
 
     # attempt to download default weights file for Resnet50                                                   
     if not status_weights and network=='Resnet50':
-        print("[INFO] Trying to download weights and labels from the public link")
+        print("[INFO] Trying to download weights from the public link")
         url_weights = cfg.Dog_RemoteShare + weights_file
         status_weights, _ = dutils.url_download(
                                    url_path = url_weights, 
-                                   data_dir='/models',
+                                   data_dir=os.path.join(cfg.BASE_DIR,'models'),
                                    data_file=weights_file)
+                                   
+    dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
+    # check if the labels file exists locally. if not -> try to download
+    status_dog_names, _ = dutils.maybe_download_data(data_dir='/data',
+                                                   data_file=dog_names_file)
+
+    # attempt to download labels file                                                   
+    if not status_dog_names:
+        print("[INFO] Trying to download labels from the public link")
         url_dog_names = cfg.Dog_RemoteShare + dog_names_file
         status_weights, _ = dutils.url_download(
                                    url_path = url_dog_names, 
-                                   data_dir='/data',
+                                   data_dir=os.path.join(cfg.BASE_DIR,'data'),
                                    data_file=dog_names_file)                                   
 
     if status_weights:
-        net_model = build_model(network)
+        dog_names  = dutils.dog_names_load()
+        net_model = build_model(network, len(dog_names))
         net_model.load_weights(saved_weights_path)
 
         # extract bottleneck features
         bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
         print("[INFO] Bottleneck feature size: %s" % str(bottleneck_feature.shape))
-        dog_names  = dutils.dog_names_load()
+
         # obtain predicted vector
         predicted_vector = net_model.predict(bottleneck_feature)
         print("[INFO] Sum: %f" % np.sum(predicted_vector))
@@ -198,28 +239,58 @@ def predict_file(img_path, network='Resnet50'):
 
         msg = mutils.format_prediction(dog_names_best, probs_best)
     else:
-        msg = "[ERROR] No weights file found! Please first train the model " + \
+        msg = "[ERROR, predict_file()] No weights file found! Please first train the model " + \
               "with the " + network + " network!"
     return msg
 
 
-def predict_data(img, network='Resnet50'):
-    if not isinstance(img, list):
-        img = [img]
-
+def predict_data(*args, **kwargs):
+    """
+    Function to make prediction on an uploaded file
+    """
+    
+    deepaas_ver_cut = pkg_resources.parse_version('0.5.0')
+    imgs = []
     filenames = []
+    
+    deepaas_ver = pkg_resources.parse_version(deepaas.__version__)
+    print("[INFO] deepaas_version: %s" % deepaas_ver)
+    predict_debug = True
+    if predict_debug:
+        print('[DEBUG] predict_data - args: %s' % args)
+        print('[DEBUG] predict_data - kwargs: %s' % kwargs)
+    if deepaas_ver >= deepaas_ver_cut:
+        for arg in args:
+            files = arg['files']
+            if not isinstance(files, list):
+                files = [files]
+            for f in files:
+                imgs.append(f)
+            network = yaml.safe_load(arg.network)
+    else:
+        imgs = args[0]
+        network='Resnet50'
 
-    for image in img:
-        f = tempfile.NamedTemporaryFile(delete=False)
-        f.write(image)
+    if not isinstance(imgs, list):
+        imgs = [imgs]
+            
+    for image in imgs:
+        if deepaas_ver >= deepaas_ver_cut:
+            f = open("/tmp/%s" % image.filename, "w+")
+            image.save(f.name)
+        else:
+            f = tempfile.NamedTemporaryFile(delete=False)
+            f.write(image)
         f.close()
         filenames.append(f.name)
-        print("tmp file: ", f.name)
+        print("Stored tmp file at: {} \t Size: {}".format(f.name,
+        os.path.getsize(f.name)))
 
     prediction = []
     try:
         for imgfile in filenames:
             prediction.append(predict_file(imgfile, network))
+            print("image: ", imgfile) # os.path.realpath(imgfile)))
     except Exception as e:
         raise e
     finally:
@@ -291,20 +362,39 @@ def train(train_args):
         }
 
     saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
-                                     'weights.best.' + network + '.hdf5')
+                                      mutils.build_weights_filename(network))
     checkpointer = ModelCheckpoint(filepath=saved_weights_path, 
                                    verbose=1, save_best_only=True)
 
     # clear possible pre-existing sessions. important!
-    backend.clear_session()
+    K.clear_session()
 
-    net_model = build_model(network)
+    dog_names = dutils.dog_names_load()
+    num_dog_breeds = len(dog_names)
+    print('[INFO] Found %d classes (dogs breeds)' % num_dog_breeds)
 
-    time_callback = TimeHistory()        
+    net_model = build_model(network, num_dog_breeds)
+
+    before = K.get_session().run(net_model.trainable_weights)
+    time_callback = TimeHistory()      
     net_model.fit(train_net, train_targets, 
                   validation_data=(valid_net, valid_targets),
                   epochs=num_epochs, batch_size=20, 
                   callbacks=[checkpointer, time_callback], verbose=1)
+    after = K.get_session().run(net_model.trainable_weights)
+    ii = 0
+    debug_here = True
+    for b, a in zip(before, after):
+        if debug_here:
+            print("[DEBUG] {} : ".format(net_model.trainable_weights[ii]))
+            ii += 1
+            if (b != a).any() and debug_here:
+                print(" * ok, training (output does not match)")
+            else:
+                print(" * !!! output is the same, not training? !!!")
+                print(" * Before: {} : ".format(b))
+                print("")
+                print(" * After: {} : ".format(a))
 
     mn = np.mean(time_callback.durations)
     std = np.std(time_callback.durations, ddof=1) if num_epochs > 1 else -1
@@ -349,6 +439,19 @@ def get_train_args():
         print(val['default'], type(val['default']))
 
     return train_args
+    
+# !!! deepaas>=0.5.0 calls get_test_args() to get args for 'predict'
+def get_test_args():
+    predict_args = cfg.predict_args
+
+    # convert default values and possible 'choices' into strings
+    for key, val in predict_args.items():
+        val['default'] = str(val['default'])  # yaml.safe_dump(val['default']) #json.dumps(val['default'])
+        if 'choices' in val:
+            val['choices'] = [str(item) for item in val['choices']]
+        print(val['default'], type(val['default']))
+
+    return predict_args
 
 # during development it might be practical 
 # to check your code from the command line

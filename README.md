@@ -1,17 +1,18 @@
 Dog's breed detector
 ==============================
 
-[![Build Status](https://jenkins.indigo-datacloud.eu/buildStatus/icon?job=Pipeline-as-code/DEEP-OC-org/dogs_breed_det/master)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master)
+[![Build Status](https://jenkins.indigo-datacloud.eu/buildStatus/icon?job=Pipeline-as-code%2FDEEP-OC-org%2Fdogs_breed_det%2Fmaster)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master/)
 
-A test example to identify Dog's breed, "Dogs breed detector", as example for [DEEPaaS API](https://github.com/indigo-dc/DEEPaaS).
 
-DEEP Open Catalog entry: [DEEP Open Catalog](https://marketplace.deep-hybrid-datacloud.eu/modules/deep-oc-dogs-breed-detection.html)
+An application to identify Dog's breed, "Dogs breed detector", using deep learning. **133** breeds are known.
+
+[DEEPaaS API](https://github.com/indigo-dc/DEEPaaS) is used to access the model functionality.
 
 Dogs breed detector is originally forked from [udacity/dogs-project](https://github.com/udacity/dog-project), dataset comes from [dog dataset](https://s3-us-west-1.amazonaws.com/udacity-aind/dog-project/dogImages.zip).
 
 The project applies Transfer learning for dog's breed identification, implemented with Tensorflow and Keras:
 
-From a pre-trained model (VGG16 | VGG19 | Resnet50 | InceptionV3 | Xception) the last layer is removed, then a new FC classification layer is added, which is trained. All images first pass through the pre-trained network and converted into the tensor with the shape of the 'before-last' layer of the pre-trained network, into so-called 'bottleneck_features'. These bottleneck_features are used then as input for the FC classification network.
+From a pre-trained model (VGG16 | VGG19 | Resnet50 | InceptionV3 | Xception) the last layer is removed, then new FC classification layers are added, which is trained. All images first pass through the pre-trained network and converted into the tensor with the shape of the 'before-last' layer of the pre-trained network, into so-called 'bottleneck_features'. These bottleneck_features are used then as input for the FC classification network.
 
 
 
@@ -23,8 +24,6 @@ Project Organization
     ├── data                   <- Data placeholde
     │
     ├── docs                   <- A default Sphinx project; see sphinx-doc.org for details
-    │
-    ├── docker                 <- Directory for Dockerfile(s)
     │
     ├── models                 <- Trained and serialized models, model predictions, or model summaries
     │
