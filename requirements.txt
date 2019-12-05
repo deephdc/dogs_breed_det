@@ -15,3 +15,4 @@ scikit-learn>=0.18.1 #==0.18.1
 pillow>=4.0.0        #==4.0.0
 py-cpuinfo
 psutil
+deepaas==0.5.1

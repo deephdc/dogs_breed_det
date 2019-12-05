@@ -14,10 +14,10 @@ import dogs_breed_det.config as cfg
 from tensorflow.python.client import device_lib
 
 
-def get_run_info(run_info):
-    _collect_cpu_info(run_info)
-    _collect_memory_info(run_info)
-    _collect_gpu_info(run_info)
+def get_sys_info(sys_info):
+    _collect_cpu_info(sys_info)
+    _collect_memory_info(sys_info)
+    _collect_gpu_info(sys_info)
 
 # The following code is also in tensorflow/tools/test/system_info_lib
 # which is not exposed for import.

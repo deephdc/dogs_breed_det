@@ -20,7 +20,7 @@ import numpy as np
 import pkg_resources
 import deepaas as deepaas
 import dogs_breed_det.config as cfg
-import dogs_breed_det.run_info as rinfo
+import dogs_breed_det.sys_info as sys_info
 import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
@@ -78,7 +78,8 @@ def get_metadata():
         'Author': None,
         'Author-email': None,
         'License': None,
-        'Train-Args': cfg.train_args
+        'Train-Args': cfg.train_args,
+        'Predict-Args': cfg.predict_args
     }
 
     for line in pkg.get_metadata_lines("PKG-INFO"):
@@ -176,7 +177,6 @@ def predict_file(img_path, network='Resnet50'):
         'VGG19': bfeatures.extract_VGG19,
         'Resnet50': bfeatures.extract_Resnet50,
         'InceptionV3': bfeatures.extract_InceptionV3,
-        'Xception': bfeatures.extract_Xception,
     }
 
     # clear possible pre-existing sessions. IMPORTANT!
@@ -192,8 +192,8 @@ def predict_file(img_path, network='Resnet50'):
     status_weights, _ = dutils.maybe_download_data(data_dir='/models',
                                                    data_file=weights_file)
 
-    # attempt to download default weights file for Resnet50                                                   
-    if not status_weights and network=='Resnet50':
+    # attempt to download default weights file                                                   
+    if not status_weights and network in cfg.cnn_list:
         print("[INFO] Trying to download weights from the public link")
         url_weights = cfg.Dog_RemoteShare + weights_file
         status_weights, _ = dutils.url_download(
@@ -317,7 +317,7 @@ def train(train_args):
         Can be loaded with json.loads() or (better for strings) with yaml.safe_load()
     """
     run_results = { "status": "ok",
-                    "run_info": [],
+                    "sys_info": [],
                     "training": [],
                   }
   
@@ -330,15 +330,15 @@ def train(train_args):
     network = yaml.safe_load(train_args.network)
     print("Network:", train_args.network, network)
 
-    flag_run_info = yaml.safe_load(train_args.run_info)
-    print(flag_run_info)
-    if(flag_run_info):
-        rinfo.get_run_info(cfg.machine_info)
-        print("run_info should be True: ", flag_run_info)
+    flag_sys_info = yaml.safe_load(train_args.sys_info)
+    print(flag_sys_info)
+    if(flag_sys_info):
+        sys_info.get_sys_info(cfg.machine_info)
+        print("sys_info should be True: ", flag_sys_info)
         print(cfg.machine_info)
-        run_results["run_info"].append(cfg.machine_info)
+        run_results["sys_info"].append(cfg.machine_info)
     else:
-        print("run_info should be False: ", flag_run_info)
+        print("sys_info should be False: ", flag_sys_info)
 
     # check that all necessary data is there
     time_start = time.time()
