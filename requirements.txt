@@ -1,6 +1,3 @@
-# backwards compatibility
-pathlib2
-
 Sphinx
 python-dotenv>=0.5.1
 
@@ -13,6 +10,7 @@ tqdm==4.11.2
 keras==2.0.2
 scikit-learn>=0.18.1 #==0.18.1
 pillow>=4.0.0        #==4.0.0
+webargs>=5.5.2
 py-cpuinfo
 psutil
-deepaas==0.5.1
+#deepaas>=1.0.0
