@@ -176,7 +176,6 @@ def predict_file(img_path, network='Resnet50'):
         'VGG19': bfeatures.extract_VGG19,
         'Resnet50': bfeatures.extract_Resnet50,
         'InceptionV3': bfeatures.extract_InceptionV3,
-        'Xception': bfeatures.extract_Xception,
     }
 
     # clear possible pre-existing sessions. IMPORTANT!
@@ -192,8 +191,8 @@ def predict_file(img_path, network='Resnet50'):
     status_weights, _ = dutils.maybe_download_data(data_dir='/models',
                                                    data_file=weights_file)
 
-    # attempt to download default weights file for Resnet50                                                   
-    if not status_weights and network=='Resnet50':
+    # attempt to download default weights file                                                   
+    if not status_weights and network in cfg.cnn_list:
         print("[INFO] Trying to download weights from the public link")
         url_weights = cfg.Dog_RemoteShare + weights_file
         status_weights, _ = dutils.url_download(
