@@ -25,11 +25,11 @@ import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
-from keras import applications
-from keras.models import Model
+#from keras import applications
+#from keras.models import Model
+#from keras import regularizers
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from keras.layers.normalization import BatchNormalization
-from keras import regularizers
 
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
@@ -307,30 +307,34 @@ def predict_url(*args):
 
 # Require only authorized people to do training
 @flaat.login_required()
-def train(train_args):
+def train(**kwargs):
     """
     Train network (transfer learning)
     Parameters
     ----------
-    train_args : dict
-        Json dict (created with json.dumps) with the user's configuration parameters that will replace the defaults.
-        Can be loaded with json.loads() or (better for strings) with yaml.safe_load()
+    https://docs.deep-hybrid-datacloud.eu/projects/deepaas/en/wip-api_v2/user/v2-api.html#deepaas.model.v2.base.BaseModel.train
     """
+    print("train(**kwargs) - kwargs: %s" % (kwargs))
+
     run_results = { "status": "ok",
                     "sys_info": [],
                     "training": [],
                   }
-  
+
+    # use the schema
+    schema = cfg.TrainArgsSchema()
+    # deserialize key-word arguments
+    train_args = schema.load(kwargs)
+
     print("train_args:", train_args)
-    
-    print(type(train_args.num_epochs), type(train_args.network))
-    num_epochs = yaml.safe_load(train_args.num_epochs)
 
-    #network = json.loads(args.network)
-    network = yaml.safe_load(train_args.network)
-    print("Network:", train_args.network, network)
+    print(type(train_args['num_epochs']), type(train_args['network']))
+    num_epochs = train_args['num_epochs']
 
-    flag_sys_info = yaml.safe_load(train_args.sys_info)
+    network = train_args['network']
+    print("Network:", train_args['network'], network)
+
+    flag_sys_info = train_args['sys_info']
     print(flag_sys_info)
     if(flag_sys_info):
         sys_info.get_sys_info(cfg.machine_info)
@@ -428,30 +432,21 @@ def train(train_args):
 
 
 def get_train_args():
+    """
+    https://docs.deep-hybrid-datacloud.eu/projects/deepaas/en/wip-api_v2/user/v2-api.html#deepaas.model.v2.base.BaseModel.get_train_args
+    https://marshmallow.readthedocs.io/en/latest/api_reference.html#module-marshmallow.fields
+    :param kwargs:
+    :return:
+    """
+    return cfg.TrainArgsSchema().fields
 
-    train_args = cfg.train_args
 
-    # convert default values and possible 'choices' into strings
-    for key, val in train_args.items():
-        val['default'] = str(val['default']) #yaml.safe_dump(val['default']) #json.dumps(val['default'])
-        if 'choices' in val:
-            val['choices'] = [str(item) for item in val['choices']]
-        print(val['default'], type(val['default']))
-
-    return train_args
-    
-# !!! deepaas>=0.5.0 calls get_test_args() to get args for 'predict'
-def get_test_args():
-    predict_args = cfg.predict_args
-
-    # convert default values and possible 'choices' into strings
-    for key, val in predict_args.items():
-        val['default'] = str(val['default'])  # yaml.safe_dump(val['default']) #json.dumps(val['default'])
-        if 'choices' in val:
-            val['choices'] = [str(item) for item in val['choices']]
-        print(val['default'], type(val['default']))
-
-    return predict_args
+def get_predict_args():
+    """
+    https://docs.deep-hybrid-datacloud.eu/projects/deepaas/en/wip-api_v2/user/v2-api.html#deepaas.model.v2.base.BaseModel.get_predict_args
+    :return:
+    """
+    return cfg.PredictArgsSchema().fields
 
 # during development it might be practical 
 # to check your code from the command line
@@ -481,15 +476,16 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Model parameters')
 
-    # get arguments configured for get_train_args()
+    # get arguments configured
     train_args = get_train_args()
+
     for key, val in train_args.items():
         parser.add_argument('--%s' % key,
-                            default=val['default'],
-                            type=type(val['default']), #may just put str
-                            help=val['help'])
+                            default=val.missing,
+                            type=type(val.missing), #may just put str
+                            help=val.metadata['description'])
         print(key, val)
-        print(type(val['default']))
+        print("train_args[{}]: {}".format(key, val.missing)) #.metadata['missing'])
 
     parser.add_argument('--method', type=str, default="get_metadata",
                         help='Method to use: get_metadata (default), \

@@ -4,6 +4,9 @@
 """
 
 from os import path
+from webargs import fields
+from dataclasses import dataclass
+from marshmallow import Schema, INCLUDE
 
 # identify basedir for the package
 BASE_DIR = path.dirname(path.normpath(path.dirname(__file__)))
@@ -19,16 +22,6 @@ machine_info = { 'cpu': '',
                  'memory_total': '',
                  'memory_available': ''
                }
-
-# Dict of dicts with the following structure to feed the deepaas API parser:
-#{ 'arg1' : {'default': 1,       # deafult value
-#            'help': '',         # can be an empty string
-#            'required': False   # bool
-#            },
-#  'arg2' : {...
-#            },
-#...
-#}
 
 cnn_list = ['Resnet50', 'InceptionV3', 'VGG16', 'VGG19']
 
@@ -55,3 +48,44 @@ predict_args = {'network':   {'default': 'Resnet50',
 
 }
 
+@dataclass
+class TrainArgs:
+     num_epochs: int
+     network: str
+     sys_info: bool
+
+class TrainArgsSchema(Schema):
+    class Meta:
+        unknown = INCLUDE  # support 'full_paths' parameter
+        
+    num_epochs = fields.Integer(
+        required=False,
+        missing=1,
+        description="Number of training epochs"
+    )
+
+    network = fields.Str(
+        required=False,
+        missing=cnn_list[0],
+        enum=cnn_list,
+        description="Neural model to use"
+    )
+
+    sys_info = fields.Boolean(
+        required=False,
+        missing=False,
+        enum=[True, False],
+        description="Print information about the system (e.g. cpu, gpu, memory)"
+    )
+
+
+class PredictArgsSchema(Schema):
+    class Meta:
+        unknown = INCLUDE  # support 'full_paths' parameter
+
+    network = fields.Str(
+        required=False,
+        missing=cnn_list[0],
+        enum=cnn_list,
+        description="Neural model to use for prediction"
+    )
