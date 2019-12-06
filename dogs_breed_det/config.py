@@ -41,9 +41,9 @@ train_args = { 'num_epochs': {'default': 1,
                              'help': 'Neural model to use',
                              'required': False
                            },
-               'run_info': {'default': False,
+               'sys_info': {'default': False,
                             'choices': [True, False],
-                            'help': 'Print information about the run (e.g. cpu, gpu, memory)',
+                            'help': 'Print information about the system (e.g. cpu, gpu, memory)',
                             'required': False
                            },
 }
