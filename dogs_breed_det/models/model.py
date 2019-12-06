@@ -25,11 +25,11 @@ import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
-from keras import applications
-from keras.models import Model
+#from keras import applications
+#from keras.models import Model
+#from keras import regularizers
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from keras.layers.normalization import BatchNormalization
-from keras import regularizers
 
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
