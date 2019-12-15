@@ -12,13 +12,12 @@ Created on Mon Sep  3 21:29:57 2018
 
 import os
 import time
-import yaml
 import keras
-import tempfile
 import argparse
+import tempfile
+import mimetypes 
 import numpy as np
 import pkg_resources
-import deepaas as deepaas
 import dogs_breed_det.config as cfg
 import dogs_breed_det.sys_info as sys_info
 import dogs_breed_det.dataset.data_utils as dutils
@@ -38,11 +37,53 @@ from keras import backend as K
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 
+from webargs import fields
+from aiohttp.web import HTTPBadRequest
 
 ## Authorization
 from flaat import Flaat
 flaat = Flaat()
+
+debug = True 
+
+def _catch_error(f):
+    def wrap(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            raise HTTPBadRequest(reason=e)
+    return wrap
+
+def _fields_to_dict(fields_in):
+    """
+    Function to convert mashmallow fields to dict()
+    """
+    dict_out = {}
     
+    for key, val in fields_in.items():
+        param = {}
+        param['default'] = val.missing
+        param['type'] = type(val.missing)
+        if key == 'files' or key == 'urls':
+            param['type'] = str
+
+        val_help = val.metadata['description']
+        if 'enum' in val.metadata.keys():
+            val_help = "{}. Choices: {}".format(val_help, 
+                                                val.metadata['enum'])
+        param['help'] = val_help
+
+        try:
+            val_req = val.required
+        except:
+            val_req = False
+        param['required'] = val_req
+
+        dict_out[key] = param
+    return dict_out
+
+class FileObj():
+    pass
 
 class TimeHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -67,9 +108,30 @@ def get_metadata():
     Function to read metadata
     """
 
+    print_meta = False
     module = __name__.split('.', 1)
+    
+    try:
+        pkg = pkg_resources.get_distribution(module[0])
+    except pkg_resources.RequirementParseError:
+        # if called from CLI, try to get pkg from the path
+        distros = list(pkg_resources.find_distributions(cfg.BASE_DIR, 
+                                                        only=True))
+        if len(distros) == 1:
+            pkg = distros[0]
+            print_meta = True
+    except Exception as e:
+        raise HTTPBadRequest(reason=e)
 
-    pkg = pkg_resources.get_distribution(module[0])
+    # deserialize key-word arguments
+    train_args = _fields_to_dict(get_train_args())
+    for key, val in train_args.items():
+        train_args[key]['type'] = str(val['type'])
+
+    predict_args = _fields_to_dict(get_predict_args())
+    for key, val in predict_args.items():
+        predict_args[key]['type'] = str(val['type'])
+
     meta = {
         'Name': None,
         'Version': None,
@@ -78,8 +140,8 @@ def get_metadata():
         'Author': None,
         'Author-email': None,
         'License': None,
-        'Train-Args': cfg.train_args,
-        'Predict-Args': cfg.predict_args
+        'Train-Args': train_args,
+        'Predict-Args': predict_args
     }
 
     for line in pkg.get_metadata_lines("PKG-INFO"):
@@ -87,6 +149,8 @@ def get_metadata():
             if line.startswith(par+":"):
                 _, value = line.split(": ", 1)
                 meta[par] = value
+                
+    print(meta) if print_meta else ''
 
     return meta
 
@@ -162,6 +226,22 @@ def build_model(network='Resnet50', num_classes=100):
                       metrics=['accuracy'])
     
     return net_model
+
+@_catch_error
+def predict(**kwargs):
+    if debug:
+        print("predict(**kwargs) - kwargs: %s" % (kwargs))
+
+    if (not any([kwargs['urls'], kwargs['files']]) or
+            all([kwargs['urls'], kwargs['files']])):
+        raise Exception("You must provide either 'url' or 'data' in the payload")
+
+    if kwargs['files']:
+        kwargs['files'] = [kwargs['files']]  # patch until list is available
+        return predict_data(kwargs)
+    elif kwargs['urls']:
+        kwargs['urls'] = [kwargs['urls']]  # patch until list is available
+        return predict_url(kwargs)
 
 
 def predict_file(img_path, network='Resnet50'):
@@ -244,57 +324,41 @@ def predict_file(img_path, network='Resnet50'):
     return msg
 
 
-def predict_data(*args, **kwargs):
+def predict_data(*args):
     """
     Function to make prediction on an uploaded file
     """
-    
-    deepaas_ver_cut = pkg_resources.parse_version('0.5.0')
-    imgs = []
-    filenames = []
-    
-    deepaas_ver = pkg_resources.parse_version(deepaas.__version__)
-    print("[INFO] deepaas_version: %s" % deepaas_ver)
-    predict_debug = True
-    if predict_debug:
-        print('[DEBUG] predict_data - args: %s' % args)
-        print('[DEBUG] predict_data - kwargs: %s' % kwargs)
-    if deepaas_ver >= deepaas_ver_cut:
-        for arg in args:
-            files = arg['files']
-            if not isinstance(files, list):
-                files = [files]
-            for f in files:
-                imgs.append(f)
-            network = yaml.safe_load(arg.network)
-    else:
-        imgs = args[0]
-        network='Resnet50'
+    print("predict_data(*args) - args: %s" % (args))
+    #print("predict_data(**kwargs) - kwargs: %s" % (kwargs))
 
-    if not isinstance(imgs, list):
-        imgs = [imgs]
-            
-    for image in imgs:
-        if deepaas_ver >= deepaas_ver_cut:
-            f = open("/tmp/%s" % image.filename, "w+")
-            image.save(f.name)
-        else:
-            f = tempfile.NamedTemporaryFile(delete=False)
-            f.write(image)
-        f.close()
-        filenames.append(f.name)
-        print("Stored tmp file at: {} \t Size: {}".format(f.name,
-        os.path.getsize(f.name)))
+    files = []
+
+    for arg in args:
+        file_objs = arg['files']
+        print("file_objs: {}".format(file_objs))
+        for f in file_objs:
+            files.append(f.filename)
+            print("file_obj: name: {}, filename: {}, content_type: {}".format(
+                                                                f.name,
+                                                                f.filename,
+                                                                f.content_type)
+                 )
+            print("File for prediction is at: {} \t Size: {}".format(
+                                                   f.filename,
+                                                   os.path.getsize(f.filename))
+                 )
+
+        network = arg['network']
 
     prediction = []
     try:
-        for imgfile in filenames:
+        for imgfile in files:
             prediction.append(predict_file(imgfile, network))
-            print("image: ", imgfile) # os.path.realpath(imgfile)))
+            print("image: ", imgfile)
     except Exception as e:
         raise e
     finally:
-        for imgfile in filenames:
+        for imgfile in files:
             os.remove(imgfile)
 
     return prediction
@@ -302,11 +366,13 @@ def predict_data(*args, **kwargs):
 
 def predict_url(*args):
     message = 'Not (yet) implemented in the model (predict_url())'
+    if debug:
+        print(message)
+
     return message
 
 
-# Require only authorized people to do training
-@flaat.login_required()
+@flaat.login_required() # Require only authorized people to do training
 def train(**kwargs):
     """
     Train network (transfer learning)
@@ -458,43 +524,80 @@ def main():
 
     if args.method == 'get_metadata':
         get_metadata()       
-    elif args.method == 'predict_file':
-        predict_file(args.file)
-    elif args.method == 'predict_data':
-        predict_data(args.file)
-    elif args.method == 'predict_url':
-        predict_url(args.url)
+    elif args.method == 'predict':
+        ## use the schema
+        #schema = cfg.PredictArgsSchema()
+        #result = schema.load(vars(args))
+    
+        # TODO: change to many files ('for' itteration)
+        # create tmp file as later it will be deleted
+        temp = tempfile.NamedTemporaryFile()
+        temp.close()
+        # copy original file into tmp file
+        with open(args.files, "rb") as f:
+            with open(temp.name, "wb") as f_tmp:
+                for line in f:
+                    f_tmp.write(line)
+        
+        # create file object to mimic aiohttp workflow
+        file_obj = FileObj()
+        file_obj.name="data"
+        file_obj.filename = temp.name
+        file_obj.content_type=mimetypes.MimeTypes().guess_type(args.files)[0]
+
+        args.files = file_obj
+        predict(**vars(args))
     elif args.method == 'train':
         start = time.time()
-        train(args)
+        train(**vars(args))
         print("Elapsed time:  ", time.time() - start)
-    else:
-        get_metadata()
 
 
 if __name__ == '__main__':
     
-    parser = argparse.ArgumentParser(description='Model parameters')
-
-    # get arguments configured
-    train_args = get_train_args()
-
-    for key, val in train_args.items():
-        parser.add_argument('--%s' % key,
-                            default=val.missing,
-                            type=type(val.missing), #may just put str
-                            help=val.metadata['description'])
-        print(key, val)
-        print("train_args[{}]: {}".format(key, val.missing)) #.metadata['missing'])
-
-    parser.add_argument('--method', type=str, default="get_metadata",
-                        help='Method to use: get_metadata (default), \
-                        predict_file, predict_data, predict_url, train')
-    parser.add_argument('--file', type=str, help='File to do prediction on, full path')
-    parser.add_argument('--url', type=str, help='URL with the image to do prediction on')
-
-    args = parser.parse_args()
-    print("Vars:", vars(args))
+    parser = argparse.ArgumentParser(description='Model parameters', 
+                                     add_help=False)
+    #parser.add_argument('--method', type=str, default="get_metadata",
+    #                    help='Method to use: get_metadata (default), \
+    #                    predict_file, predict_data, predict_url, train')
+    #parser.add_argument('--file', type=str, help='File to do prediction on, full path')
+    #parser.add_argument('--url', type=str, help='URL with the image to do prediction on')
     
+    cmd_parser = argparse.ArgumentParser()    
+    subparsers = cmd_parser.add_subparsers(
+                            help='methods. Use \"model.py method --help\" to get more info', 
+                            dest='method')
+
+    get_metadata_parser = subparsers.add_parser('get_metadata', 
+                                         help='get_metadata method',
+                                         parents=[parser])
+
+    # get train arguments configured
+    train_parser = subparsers.add_parser('train', 
+                                         help='commands for training',
+                                         parents=[parser])
+    train_args = _fields_to_dict(get_train_args())
+    for key, val in train_args.items():
+        train_parser.add_argument('--%s' % key,
+                               default=val['default'],
+                               type=val['type'], #may just put str
+                               help=val['help'],
+                               required=val['required'])
+
+    # get predict arguments configured
+    predict_parser = subparsers.add_parser('predict', 
+                                           help='commands for prediction',
+                                           parents=[parser])
+
+    predict_args = _fields_to_dict(get_predict_args())
+    for key, val in predict_args.items():
+        predict_parser.add_argument('--%s' % key,
+                               default=val['default'],
+                               type=val['type'], #may just put str
+                               help=val['help'],
+                               required=val['required'])
+
+    args = cmd_parser.parse_args()
+   
     main()
 

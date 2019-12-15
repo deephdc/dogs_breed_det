@@ -5,7 +5,6 @@
 
 from os import path
 from webargs import fields
-from dataclasses import dataclass
 from marshmallow import Schema, INCLUDE
 
 # identify basedir for the package
@@ -48,11 +47,6 @@ predict_args = {'network':   {'default': 'Resnet50',
 
 }
 
-@dataclass
-class TrainArgs:
-     num_epochs: int
-     network: str
-     sys_info: bool
 
 class TrainArgsSchema(Schema):
     class Meta:
@@ -88,4 +82,19 @@ class PredictArgsSchema(Schema):
         missing=cnn_list[0],
         enum=cnn_list,
         description="Neural model to use for prediction"
+    )
+    
+    files = fields.Field(
+        required=False,
+        missing=None,
+        type="file",
+        data_key="data",
+        location="form",
+        description="Select the image you want to classify."
+    )
+    
+    urls = fields.Url(
+        required=False,
+        missing=None,
+        description="Select an URL of the image you want to classify."
     )
