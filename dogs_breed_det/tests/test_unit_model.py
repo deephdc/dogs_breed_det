@@ -21,6 +21,9 @@ debug = True
 class TestModelMethods(unittest.TestCase):
     def setUp(self):
         self.meta = dog_model.get_metadata()
+        self.network = 'Resnet50'
+        self.num_classes = 133
+        
         print("[INFO] TensorFlow version: {}".format(tf.__version__))
         
     def test_model_metadata_type(self):
@@ -40,14 +43,13 @@ class TestModelMethods(unittest.TestCase):
         self.assertEqual(self.meta['Author-email'], 'valentin.kozlov@kit.edu')
 
     def test_model_variables(self):
-        network = 'Resnet50'
-        num_classes = 133
+        print("[test_model_variables]")
 
         train_tensor = np.random.normal(size=(2, 1, 1, 2048))
         #train_tensor = np.random.normal(size=(2, 224, 224, 3))  # full ResNet 
-        label_tensor = np.random.normal(size=(2, num_classes))
+        label_tensor = np.random.normal(size=(2, self.num_classes))
 
-        model = dog_model.build_model(network, num_classes)
+        model = dog_model.build_model(self.network, self.num_classes)
         print(model.trainable_weights)
 
         before = K.get_session().run(model.trainable_weights)

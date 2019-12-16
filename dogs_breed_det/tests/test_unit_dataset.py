@@ -31,6 +31,9 @@ class TestDatasetMethods(unittest.TestCase):
         assert dist_exist
 
     def test_load_data_files(self):
+        """
+        Test if we can correctly build a list of files in the directory
+        """
         path = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/inputs/train')
         file_list_ref = np.array([os.path.join(path, '001.Affenpinscher/Affenpinscher_00001.jpg'),
                                   os.path.join(path, '001.Affenpinscher/Affenpinscher_00002.jpg'),
@@ -43,6 +46,10 @@ class TestDatasetMethods(unittest.TestCase):
         assert (file_list_ref == np.sort(file_list)).all()
     
     def test_dog_names_create(self):
+        """
+        Test if we can build a list of dog's breeds 
+        based on files in the directory. Also upload it to the remote storage
+        """
         train_path = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/inputs/train', '*')
         labels_path = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/tmp/tmp_dog_names.txt')
         dog_names_ref = ['Affenpinscher', 'Beagle']
@@ -56,6 +63,9 @@ class TestDatasetMethods(unittest.TestCase):
         self.assertEqual(dog_names, dog_names_ref)
     
     def test_dog_names_load(self):
+        """
+        Test if we correctly return list of dogs' breeds read from the file
+        """
         labels_path = os.path.join(cfg.BASE_DIR,'dogs_breed_det/tests/inputs/dog_names.txt')
         dog_names_ref = ['Affenpinscher', 'Beagle', 'Collie', 'Mastiff', 'Saint_bernard']
         dog_names = dutils.dog_names_load(labels_path)

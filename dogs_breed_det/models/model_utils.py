@@ -16,11 +16,9 @@ def build_weights_filename(network):
     return weights_filename
 
 def format_prediction(labels, probabilities):
-    d = {
-        "status": "ok",
-        "predictions": [],
-    }
-
+    
+    predictions = []
+    
     for label, prob in zip(labels, probabilities):
         name = label
 
@@ -32,8 +30,10 @@ def format_prediction(labels, probabilities):
                           {"link": 'Wikipedia', "url": wikipedia_link(name)}],
             },
         }
-        d["predictions"].append(pred)
-    return d
+        
+        predictions.append(pred)
+
+    return predictions
 
 
 def image_link(pred_lab):
