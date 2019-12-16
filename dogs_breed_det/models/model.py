@@ -24,16 +24,16 @@ import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
+
 import keras
+from keras import backend as K
 #from keras import applications
 #from keras.models import Model
 #from keras import regularizers
-from keras.layers import Dense, GlobalAveragePooling2D, Dropout
-from keras.layers.normalization import BatchNormalization
-
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
-from keras import backend as K
+from keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from keras.layers.normalization import BatchNormalization
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
@@ -44,7 +44,8 @@ from aiohttp.web import HTTPBadRequest
 from flaat import Flaat
 flaat = Flaat()
 
-debug = False 
+# Switch for debugging in this script
+debug_model = False 
 
 def _catch_error(f):
     def wrap(*args, **kwargs):
@@ -107,8 +108,6 @@ def get_metadata():
     """
     Function to read metadata
     """
-
-    print_meta = False
     module = __name__.split('.', 1)
     
     try:
@@ -228,8 +227,8 @@ def build_model(network='Resnet50', num_classes=100):
 
 @_catch_error
 def predict(**kwargs):
-    if debug:
-        print("predict(**kwargs) - kwargs: %s" % (kwargs))
+    
+    print("predict(**kwargs) - kwargs: %s" % (kwargs)) if debug_model else ''
 
     if (not any([kwargs['urls'], kwargs['files']]) or
             all([kwargs['urls'], kwargs['files']])):
@@ -301,7 +300,9 @@ def predict_file(img_path, network='Resnet50'):
 
         # extract bottleneck features
         bottleneck_feature = nets[network](dutils.path_to_tensor(img_path))
-        print("[INFO] Bottleneck feature size: %s" % str(bottleneck_feature.shape))
+        if debug_model:
+            print("[INFO] Bottleneck feature size: {}".format(
+                                                     bottleneck_feature.shape))
 
         # obtain predicted vector
         predicted_vector = net_model.predict(bottleneck_feature)
@@ -318,8 +319,8 @@ def predict_file(img_path, network='Resnet50'):
 
         msg = mutils.format_prediction(dog_names_best, probs_best)
     else:
-        msg = "ERROR in predict_file(): No weights file found! Please first train the model " + \
-              "with the " + network + " network!"
+        msg = "ERROR in predict_file(). No weights file found! " + \
+              "Please first train the model with the " + network + " network!"
         msg = {"Error": msg}
 
     return msg
@@ -329,24 +330,22 @@ def predict_data(*args):
     """
     Function to make prediction on an uploaded file
     """
-    print("predict_data(*args) - args: %s" % (args)) if debug else ''
+    print("predict_data(*args) - args: %s" % (args)) if debug_model else ''
 
     files = []
 
     for arg in args:
         file_objs = arg['files']
-        print("file_objs: {}".format(file_objs))
         for f in file_objs:
             files.append(f.filename)
-            print("file_obj: name: {}, filename: {}, content_type: {}".format(
-                                                                f.name,
-                                                                f.filename,
-                                                                f.content_type)
-                 )
-            print("File for prediction is at: {} \t Size: {}".format(
-                                                   f.filename,
-                                                   os.path.getsize(f.filename))
-                 )
+            if debug_model:
+                print("file_obj: name: {}, filename: {}, content_type: {}".format(
+                                                               f.name,
+                                                               f.filename,
+                                                               f.content_type))
+                print("File for prediction is at: {} \t Size: {}".format(
+                                                  f.filename,
+                                                  os.path.getsize(f.filename)))
 
         network = arg['network']
 
@@ -378,7 +377,7 @@ def train(**kwargs):
     ----------
     https://docs.deep-hybrid-datacloud.eu/projects/deepaas/en/wip-api_v2/user/v2-api.html#deepaas.model.v2.base.BaseModel.train
     """
-    print("train(**kwargs) - kwargs: %s" % (kwargs))
+    print("train(**kwargs) - kwargs: %s" % (kwargs)) if debug_model else ''
 
     run_results = { "status": "ok",
                     "sys_info": [],
@@ -390,23 +389,26 @@ def train(**kwargs):
     # deserialize key-word arguments
     train_args = schema.load(kwargs)
 
-    print("train_args:", train_args)
 
-    print(type(train_args['num_epochs']), type(train_args['network']))
     num_epochs = train_args['num_epochs']
-
     network = train_args['network']
-    print("Network:", train_args['network'], network)
+    
+    if debug_model:
+        print("train_args:", train_args)
+        print(type(train_args['num_epochs']), type(train_args['network']))
+        print("Network:", train_args['network'], network)
+
 
     flag_sys_info = train_args['sys_info']
     print(flag_sys_info)
     if(flag_sys_info):
         sys_info.get_sys_info(cfg.machine_info)
-        print("sys_info should be True: ", flag_sys_info)
-        print(cfg.machine_info)
+        if debug_model:
+            print("sys_info should be True: ", flag_sys_info)
+            print(cfg.machine_info)
         run_results["sys_info"].append(cfg.machine_info)
     else:
-        print("sys_info should be False: ", flag_sys_info)
+        print("sys_info should be False: ", flag_sys_info) if debug_model else ''
 
     # check that all necessary data is there
     time_start = time.time()
@@ -421,8 +423,10 @@ def train(**kwargs):
     valid_net = bfeatures.load_features('valid', network)
     test_net = bfeatures.load_features('test', network)
 
-    print('[INFO] Sizes of bottleneck_features (train, valid, test):')
-    print(train_net.shape, valid_net.shape, test_net.shape)
+    if debug_model:
+        print('[INFO] Sizes of bottleneck_features (train, valid, test):')
+        print(train_net.shape, valid_net.shape, test_net.shape)
+
     data_size = {
         'train': len(train_targets),
         'valid': len(valid_targets),
@@ -450,8 +454,10 @@ def train(**kwargs):
                   epochs=num_epochs, batch_size=20, 
                   callbacks=[checkpointer, time_callback], verbose=1)
     after = K.get_session().run(net_model.trainable_weights)
+
+    ## debug the neural network, can be removed from production    
+    debug_here = False
     ii = 0
-    debug_here = True
     for b, a in zip(before, after):
         if debug_here:
             print("[DEBUG] {} : ".format(net_model.trainable_weights[ii]))
@@ -463,6 +469,7 @@ def train(**kwargs):
                 print(" * Before: {} : ".format(b))
                 print("")
                 print(" * After: {} : ".format(a))
+    ## end of "debug the neural network"
 
     mn = np.mean(time_callback.durations)
     std = np.std(time_callback.durations, ddof=1) if num_epochs > 1 else -1
