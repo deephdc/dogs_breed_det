@@ -12,7 +12,7 @@ Created on Mon Sep  3 21:29:57 2018
 
 import os
 import time
-import keras
+import json
 import argparse
 import tempfile
 import mimetypes 
@@ -24,6 +24,7 @@ import dogs_breed_det.dataset.data_utils as dutils
 import dogs_breed_det.dataset.make_dataset as mdata
 import dogs_breed_det.models.model_utils as mutils
 import dogs_breed_det.features.build_features as bfeatures
+import keras
 #from keras import applications
 #from keras.models import Model
 #from keras import regularizers
@@ -37,14 +38,13 @@ from keras import backend as K
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 
-from webargs import fields
 from aiohttp.web import HTTPBadRequest
 
 ## Authorization
 from flaat import Flaat
 flaat = Flaat()
 
-debug = True 
+debug = False 
 
 def _catch_error(f):
     def wrap(*args, **kwargs):
@@ -82,7 +82,7 @@ def _fields_to_dict(fields_in):
         dict_out[key] = param
     return dict_out
 
-class FileObj():
+class EmptyObj():
     pass
 
 class TimeHistory(keras.callbacks.Callback):
@@ -119,29 +119,30 @@ def get_metadata():
                                                         only=True))
         if len(distros) == 1:
             pkg = distros[0]
-            print_meta = True
     except Exception as e:
         raise HTTPBadRequest(reason=e)
 
     # deserialize key-word arguments
     train_args = _fields_to_dict(get_train_args())
+    # make 'type' JSON serializable
     for key, val in train_args.items():
         train_args[key]['type'] = str(val['type'])
 
     predict_args = _fields_to_dict(get_predict_args())
+    # make 'type' JSON serializable
     for key, val in predict_args.items():
         predict_args[key]['type'] = str(val['type'])
 
     meta = {
-        'Name': None,
-        'Version': None,
-        'Summary': None,
-        'Home-page': None,
-        'Author': None,
-        'Author-email': None,
-        'License': None,
-        'Train-Args': train_args,
-        'Predict-Args': predict_args
+        'Name' : None,
+        'Version' : None,
+        'Summary' : None,
+        'Home-page' : None,
+        'Author' : None,
+        'Author-email' : None,
+        'License' : None,
+        'Help-train' : train_args,
+        'Help-predict' : predict_args
     }
 
     for line in pkg.get_metadata_lines("PKG-INFO"):
@@ -150,8 +151,6 @@ def get_metadata():
                 _, value = line.split(": ", 1)
                 meta[par] = value
                 
-    print(meta) if print_meta else ''
-
     return meta
 
 
@@ -319,8 +318,10 @@ def predict_file(img_path, network='Resnet50'):
 
         msg = mutils.format_prediction(dog_names_best, probs_best)
     else:
-        msg = "[ERROR, predict_file()] No weights file found! Please first train the model " + \
+        msg = "ERROR in predict_file(): No weights file found! Please first train the model " + \
               "with the " + network + " network!"
+        msg = {"Error": msg}
+
     return msg
 
 
@@ -328,8 +329,7 @@ def predict_data(*args):
     """
     Function to make prediction on an uploaded file
     """
-    print("predict_data(*args) - args: %s" % (args))
-    #print("predict_data(**kwargs) - kwargs: %s" % (kwargs))
+    print("predict_data(*args) - args: %s" % (args)) if debug else ''
 
     files = []
 
@@ -366,11 +366,9 @@ def predict_data(*args):
 
 def predict_url(*args):
     message = 'Not (yet) implemented in the model (predict_url())'
-    if debug:
-        print(message)
+    message = {"Error": message}
 
     return message
-
 
 @flaat.login_required() # Require only authorized people to do training
 def train(**kwargs):
@@ -523,45 +521,47 @@ def main():
     """
 
     if args.method == 'get_metadata':
-        get_metadata()       
+        meta = get_metadata()
+        print(json.dumps(meta))
+        return meta 
     elif args.method == 'predict':
         ## use the schema
         #schema = cfg.PredictArgsSchema()
         #result = schema.load(vars(args))
     
         # TODO: change to many files ('for' itteration)
-        # create tmp file as later it will be deleted
-        temp = tempfile.NamedTemporaryFile()
-        temp.close()
-        # copy original file into tmp file
-        with open(args.files, "rb") as f:
-            with open(temp.name, "wb") as f_tmp:
-                for line in f:
-                    f_tmp.write(line)
+        if args.files:
+            # create tmp file as later it will be deleted
+            temp = tempfile.NamedTemporaryFile()
+            temp.close()
+            # copy original file into tmp file
+            with open(args.files, "rb") as f:
+                with open(temp.name, "wb") as f_tmp:
+                    for line in f:
+                        f_tmp.write(line)
         
-        # create file object to mimic aiohttp workflow
-        file_obj = FileObj()
-        file_obj.name="data"
-        file_obj.filename = temp.name
-        file_obj.content_type=mimetypes.MimeTypes().guess_type(args.files)[0]
-
-        args.files = file_obj
-        predict(**vars(args))
+            # create file object to mimic aiohttp workflow
+            file_obj = EmptyObj()
+            file_obj.name="data"
+            file_obj.filename = temp.name
+            file_obj.content_type=mimetypes.MimeTypes().guess_type(args.files)[0]
+            args.files = file_obj
+        
+        results = predict(**vars(args))
+        print(json.dumps(results))
+        return results        
     elif args.method == 'train':
         start = time.time()
-        train(**vars(args))
+        results = train(**vars(args))
         print("Elapsed time:  ", time.time() - start)
+        print(json.dumps(results))
+        return results
 
 
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Model parameters', 
                                      add_help=False)
-    #parser.add_argument('--method', type=str, default="get_metadata",
-    #                    help='Method to use: get_metadata (default), \
-    #                    predict_file, predict_data, predict_url, train')
-    #parser.add_argument('--file', type=str, help='File to do prediction on, full path')
-    #parser.add_argument('--url', type=str, help='URL with the image to do prediction on')
     
     cmd_parser = argparse.ArgumentParser()    
     subparsers = cmd_parser.add_subparsers(
