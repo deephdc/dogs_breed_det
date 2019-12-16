@@ -1,3 +1,6 @@
+# backwards compatibility
+pathlib2
+
 Sphinx
 python-dotenv>=0.5.1
 
