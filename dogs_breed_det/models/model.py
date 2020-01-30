@@ -133,15 +133,15 @@ def get_metadata():
         predict_args[key]['type'] = str(val['type'])
 
     meta = {
-        'Name' : None,
-        'Version' : None,
-        'Summary' : None,
-        'Home-page' : None,
-        'Author' : None,
-        'Author-email' : None,
-        'License' : None,
-        'Help-train' : train_args,
-        'Help-predict' : predict_args
+        'name' : None,
+        'version' : None,
+        'summary' : None,
+        'home-page' : None,
+        'author' : None,
+        'author-email' : None,
+        'license' : None,
+        'help-train' : train_args,
+        'help-predict' : predict_args
     }
 
     for line in pkg.get_metadata_lines("PKG-INFO"):
