@@ -4,6 +4,8 @@
 """
 
 from os import path
+from webargs import fields
+from marshmallow import Schema, INCLUDE
 
 # identify basedir for the package
 BASE_DIR = path.dirname(path.normpath(path.dirname(__file__)))
@@ -20,38 +22,54 @@ machine_info = { 'cpu': '',
                  'memory_available': ''
                }
 
-# Dict of dicts with the following structure to feed the deepaas API parser:
-#{ 'arg1' : {'default': 1,       # deafult value
-#            'help': '',         # can be an empty string
-#            'required': False   # bool
-#            },
-#  'arg2' : {...
-#            },
-#...
-#}
-
 cnn_list = ['Resnet50', 'InceptionV3', 'VGG16', 'VGG19']
 
-train_args = { 'num_epochs': {'default': 1,
-                              'help': 'Number of epochs to train on',
-                              'required': False
-                             },
-               'network':   {'default': 'Resnet50',
-                             'choices': cnn_list,
-                             'help': 'Neural model to use',
-                             'required': False
-                           },
-               'sys_info': {'default': False,
-                            'choices': [True, False],
-                            'help': 'Print information about the system (e.g. cpu, gpu, memory)',
-                            'required': False
-                           },
-}
-predict_args = {'network':   {'default': 'Resnet50',
-                             'choices': cnn_list,
-                             'help': 'Neural model to use',
-                             'required': False
-                           },
+# class / place to describe arguments for predict()
+class PredictArgsSchema(Schema):
+    class Meta:
+        unknown = INCLUDE  # supports extra parameters
 
-}
+    network = fields.Str(
+        required=False,
+        missing=cnn_list[0],
+        enum=cnn_list,
+        description="Neural model to use for prediction"
+    )
+    
+    files = fields.Field(
+        required=False,
+        missing=None,
+        type="file",
+        data_key="data",
+        location="form",
+        description="Select the image you want to classify."
+    )
+    
+    urls = fields.Url(
+        required=False,
+        missing=None,
+        description="Select an URL of the image you want to classify."
+    )
 
+
+# class / place to describe arguments for train()
+class TrainArgsSchema(Schema):
+    class Meta:
+        unknown = INCLUDE  # supports extra parameters
+        
+    num_epochs = fields.Integer(
+        required=False,
+        missing=1,
+        description="Number of training epochs")
+
+    network = fields.Str(
+        required=False,
+        missing=cnn_list[0],
+        enum=cnn_list,
+        description="Neural model to use")
+
+    sys_info = fields.Boolean(
+        required=False,
+        missing=False,
+        enum=[True, False],
+        description="Print information about the system (e.g. cpu, gpu, memory)")
