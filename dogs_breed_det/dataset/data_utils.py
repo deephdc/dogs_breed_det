@@ -198,8 +198,8 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
 
     data_dir = data_dir.lstrip('/')
     # for now we assume that everything will be unzipped in ~/data directory
-    unzip_dir = os.path.join(cfg.BASE_DIR, 'data')
-  
+    unzip_dir = cfg.DATA_DIR
+
     # remove last extension, should be .zip
     data_name = os.path.splitext(data_file)[0]
 
@@ -229,13 +229,13 @@ def build_targets(data_type):
     :param path: path to dataset images
     :return: numpy array containing onehot-encoded classification labels
     """
-    data_dir = os.path.join(cfg.BASE_DIR, 'data', cfg.Dog_DataDir, data_type)
+    data_dir = os.path.join(cfg.DATA_DIR, cfg.Dog_DataDir, data_type)
     data = load_files(data_dir)
     # get number of classes for one-hot encoding
     nclasses = len(dog_names_load()) # expect that cfg.Dog_LabelsFile exists
     dog_targets = np_utils.to_categorical(np.array(data['target']), nclasses)
     targets_file = 'Dogs_targets_' + data_type + '.npz'
-    targets_path = os.path.join(cfg.BASE_DIR, 'data', targets_file) 
+    targets_path = os.path.join(cfg.DATA_DIR, targets_file) 
     
     if data_type == 'train':
         np.savez(targets_path, train=dog_targets)
@@ -269,15 +269,15 @@ def load_targets(data_type):
     """
     
     targets_file = 'Dogs_targets_' + data_type + '.npz'
-    targets_path = os.path.join(cfg.BASE_DIR, 'data', targets_file)
+    targets_path = os.path.join(cfg.DATA_DIR, targets_file)
     print("[INFO] Using %s" % targets_path)
     targets = np.load(targets_path)[data_type]
 
     return targets
 
 
-def dog_names_create(dataImagesTrain=os.path.join(cfg.BASE_DIR,
-                                                  'data', cfg.Dog_DataDir, 
+def dog_names_create(dataImagesTrain=os.path.join(cfg.DATA_DIR,
+                                                  cfg.Dog_DataDir, 
                                                   'train','*'),
                      dog_names_path=cfg.Dog_LabelsFile):
     """

@@ -23,7 +23,7 @@ def check_targets(data_type):
     """
     data_dir = '/data'
     targets_file = 'Dogs_targets_' + data_type + '.npz'
-    targets_path = os.path.join(cfg.BASE_DIR, 'data', targets_file)
+    targets_path = os.path.join(cfg.DATA_DIR, targets_file)
     targets_exists, _ = dutils.maybe_download_data(data_dir=data_dir,
                                                    data_file=targets_file)
 

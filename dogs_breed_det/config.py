@@ -2,18 +2,27 @@
 """
    Module to define CONSTANTS used across the project
 """
-
-from os import path
+import os
 from webargs import fields
 from marshmallow import Schema, INCLUDE
 
 # identify basedir for the package
-BASE_DIR = path.dirname(path.normpath(path.dirname(__file__)))
+BASE_DIR = os.path.dirname(os.path.normpath(os.path.dirname(__file__)))
+if 'APP_LOCAL_DATA' in os.environ and len(os.environ['APP_LOCAL_DATA']) > 1:
+    DATA_DIR = os.environ['APP_LOCAL_DATA']
+else:
+    DATA_DIR = os.path.join(BASE_DIR, 'data')
+
+if 'APP_LOCAL_MODELS' in os.environ and len(os.environ['APP_LOCAL_MODELS']) > 1:
+    MODELS_DIR = os.environ['APP_LOCAL_MODELS']
+else:
+    MODELS_DIR = os.path.join(BASE_DIR, 'models')
+    
 Dog_RemoteStorage = 'rshare:/deep-oc-apps/dogs_breed_det/'
 Dog_RemoteShare = 'https://nc.deep-hybrid-datacloud.eu/s/D7DLWcDsRoQmRMN/download?path=%2F&files='
 Dog_DataDir = 'dogImages'
 Dog_WeightsPattern = 'weights.best.NETWORK.3layers.hdf5'
-Dog_LabelsFile = path.join(BASE_DIR, 'data','dog_names.txt')
+Dog_LabelsFile = os.path.join(DATA_DIR, 'dog_names.txt')
 
 
 machine_info = { 'cpu': '',
