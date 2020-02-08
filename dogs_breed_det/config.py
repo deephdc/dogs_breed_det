@@ -8,15 +8,14 @@ from marshmallow import Schema, INCLUDE
 
 # identify basedir for the package
 BASE_DIR = os.path.dirname(os.path.normpath(os.path.dirname(__file__)))
-if 'APP_LOCAL_DATA' in os.environ and len(os.environ['APP_LOCAL_DATA']) > 1:
-    DATA_DIR = os.environ['APP_LOCAL_DATA']
-else:
-    DATA_DIR = os.path.join(BASE_DIR, 'data')
 
-if 'APP_LOCAL_MODELS' in os.environ and len(os.environ['APP_LOCAL_MODELS']) > 1:
-    MODELS_DIR = os.environ['APP_LOCAL_MODELS']
+if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ and len(os.environ['APP_INPUT_OUTPUT_BASE_DIR']) > 1:
+    IN_OUT_BASE_DIR = os.environ['APP_INPUT_OUTPUT_BASE_DIR']
 else:
-    MODELS_DIR = os.path.join(BASE_DIR, 'models')
+    IN_OUT_BASE_DIR = BASE_DIR
+
+DATA_DIR = os.path.join(IN_OUT_BASE_DIR, 'data')
+MODELS_DIR = os.path.join(IN_OUT_BASE_DIR, 'models')
     
 Dog_RemoteStorage = 'rshare:/deep-oc-apps/dogs_breed_det/'
 Dog_RemoteShare = 'https://nc.deep-hybrid-datacloud.eu/s/D7DLWcDsRoQmRMN/download?path=%2F&files='
@@ -24,6 +23,8 @@ Dog_DataDir = 'dogImages'
 Dog_WeightsPattern = 'weights.best.NETWORK.3layers.hdf5'
 Dog_LabelsFile = os.path.join(DATA_DIR, 'dog_names.txt')
 
+REMOTE_DATA_DIR = os.path.join(Dog_RemoteStorage, 'data')
+REMOTE_MODELS_DIR = os.path.join(Dog_RemoteStorage, 'models')
 
 machine_info = { 'cpu': '',
                  'gpu': '',

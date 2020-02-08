@@ -21,10 +21,11 @@ def check_targets(data_type):
     """Check if targets file exists locally
        Only one dataset, e.g. train, valid, test is checked
     """
-    data_dir = '/data'
+    remote_dir = cfg.REMOTE_DATA_DIR   
     targets_file = 'Dogs_targets_' + data_type + '.npz'
     targets_path = os.path.join(cfg.DATA_DIR, targets_file)
-    targets_exists, _ = dutils.maybe_download_data(data_dir=data_dir,
+    targets_exists, _ = dutils.maybe_download_data(remote_dir,
+                                                   cfg.DATA_DIR,
                                                    data_file=targets_file)
 
     if not targets_exists:
@@ -37,9 +38,8 @@ def check_targets(data_type):
 
         # Upload to nextcloud newly created file
         targets_exists = True if os.path.exists(targets_path) else False
-        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + data_dir
-        print("[INFO] Upload %s to %s" % (targets_path, dest_dir))    
-        dutils.rclone_copy(targets_path, dest_dir)
+        print("[INFO] Upload %s to %s" % (targets_path, remote_dir))    
+        dutils.rclone_copy(targets_path, remote_dir)
 
     return targets_exists
 
@@ -48,12 +48,12 @@ def check_features(data_type, network='Resnet50'):
     """Check if features file exists locally
        Only one dataset, e.g. train, valid, test is checked
     """
-    data_dir = bfeatures.set_features_file(data_type, network,
-                                           return_type='dir')
-    bottleneck_file =  bfeatures.set_features_file(data_type,
-                                                   network, return_type='file')
+    
+    remote_dir=os.path.join(cfg.REMOTE_DATA_DIR, 'bottleneck_features')
     bottleneck_path = bfeatures.set_features_file(data_type, network)
-    bottleneck_exists, _ = dutils.maybe_download_data(data_dir=data_dir,
+    data_dir, bottleneck_file = os.path.split(bottleneck_path)
+    bottleneck_exists, _ = dutils.maybe_download_data(remote_dir=remote_dir,
+                                                      local_dir=data_dir,
                                                       data_file=bottleneck_file)
 
     if not bottleneck_exists:
@@ -66,9 +66,8 @@ def check_features(data_type, network='Resnet50'):
         
         # Upload to nextcloud newly created file
         bottleneck_exists = True if os.path.exists(bottleneck_path) else False
-        dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/'+ data_dir
-        print("[INFO] Upload %s to %s" % (bottleneck_path, dest_dir))
-        dutils.rclone_copy(bottleneck_path, dest_dir)
+        print("[INFO] Upload %s to %s" % (bottleneck_path, remote_dir))
+        dutils.rclone_copy(bottleneck_path, remote_dir)
         
     return bottleneck_exists
 
@@ -79,8 +78,10 @@ def prepare_data(network='Resnet50'):
    
     # check if dog_names file exists locally, if not -> download,
     # if not downloaded -> dutils.dog_names_create()
+    remote_dir = os.path.join(cfg.Dog_RemoteStorage, 'data')
     dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
-    status_dog_names, _ = dutils.maybe_download_data(data_dir='/data',
+    status_dog_names, _ = dutils.maybe_download_data(remote_dir,
+                                                     local_dir=cfg.DATA_DIR,
                                                      data_file=dog_names_file)
 
     if not status_dog_names:

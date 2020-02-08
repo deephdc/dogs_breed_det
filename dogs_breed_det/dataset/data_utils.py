@@ -117,16 +117,16 @@ def rclone_copy(src_path, dest_dir, src_type='file', verbose=False):
     return dest_exist, error_out
 
 def url_download(url_path = cfg.Dog_RemoteShare,
-                 data_dir = os.path.join(cfg.BASE_DIR, 'models'),
+                 local_dir = cfg.MODELS_DIR,
                  data_file = 'weights.best.ResNet50.hdf5'):
     """ Function to copy a file from URL
     :param url_path: remote URL to download
-    :param data_dir: full path to where for storing the file
-    :param data_file: file name into which for saving the remote file
+    :param local_dir: local directory path for storing the file
+    :param data_file: file name into which save the remote file
     :return: if file is downloaded (=local version exists), possible error
     """
     
-    file_path = os.path.join(data_dir, data_file)
+    file_path = os.path.join(local_dir, data_file)
 
     def _progress(count, block_size, total_size):
         sys.stdout.write('\r>> Downloading %s %.1f' % (data_file,
@@ -149,39 +149,31 @@ def url_download(url_path = cfg.Dog_RemoteShare,
     return dest_exist, error_out
     
 
-def maybe_download_data(remote_storage=cfg.Dog_RemoteStorage, 
-                        data_dir='/models/bottleneck_features',
+def maybe_download_data(remote_dir=os.path.join(cfg.REMOTE_DATA_DIR,
+                                                'bottleneck_features'),
+                        local_dir=os.path.join(cfg.DATA_DIR,
+                                              'bottleneck_features'),
                         data_file='Resnet50_features_train.npz'):
     """
     Download data if it does not exist locally.
-    :param remote_storage: remote storage where to download from
-    :param data_dir: remote _and_ local dir to put data
+    :param remote_dir: remote directory full path to download from
+    :param local_dir: local dir full path to put data
     :param data_file: name of the file to download
     """
     # status for data if exists or not
     status = False
     error_out = None
 
-    #join doesn't work if data_dir starts with '/'!
-    data_dir = data_dir.lstrip('/')
-    data_dir = data_dir.rstrip('/')
-
-    local_dir = os.path.join(cfg.BASE_DIR, data_dir)
-    local_path = os.path.join(local_dir, data_file)
+    data_path = os.path.join(local_dir, data_file)
     # if data_file does not exist locally, download it
-    if not os.path.exists(local_path):
-        remote_url = remote_storage.rstrip('/') + '/' + \
-                     os.path.join(data_dir, data_file)        
-        print("[INFO] Url: %s" % (remote_url))
-        print("[INFO] Local path: %s" % (local_path))        
-        #check that every sub directory exists locally, if not -> create
-        data_subdirs = data_dir.split('/')
-        sub_dir = cfg.BASE_DIR
-        for sdir in data_subdirs:
-            sub_dir = os.path.join(sub_dir, sdir)
-            if not os.path.exists(sub_dir):
-                os.makedirs(sub_dir)
-        status, error_out = rclone_copy(remote_url, local_dir)
+    if not os.path.exists(data_path):
+        remote_path = os.path.join(remote_dir, data_file)        
+        print("[INFO] Remote path: %s" % (remote_path))
+        print("[INFO] Local path: %s" % (data_path))        
+        #check that local directory exists, if not -> create
+        if not os.path.exists(local_dir):
+            os.makedirs(local_dir)
+        status, error_out = rclone_copy(remote_path, local_dir)
         #print("[DEBUG, maybe_download_data]: ", status, error_out)
     else:
         status = True
@@ -190,13 +182,13 @@ def maybe_download_data(remote_storage=cfg.Dog_RemoteStorage,
     return status, error_out
 
 
-def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
-                             data_dir='/data/raw',
+def maybe_download_and_unzip(remote_dir=os.path.join(cfg.REMOTE_DATA_DIR,
+                                                     'raw'),
+                             local_dir=os.path.join(cfg.DATA_DIR, 'raw'),
                              data_file='dogImages.zip'):
     """Download and extract the zip archive.
     """
 
-    data_dir = data_dir.lstrip('/')
     # for now we assume that everything will be unzipped in ~/data directory
     unzip_dir = cfg.DATA_DIR
 
@@ -204,17 +196,17 @@ def maybe_download_and_unzip(data_storage=cfg.Dog_RemoteStorage,
     data_name = os.path.splitext(data_file)[0]
 
     # if 'data_name' is not present locally, 
-    # try to download and de-archive corresponding .zip file
+    # try to download and de-archive the corresponding .zip file
     unzip_dir_data = os.path.join(unzip_dir, data_name)
     if not os.path.exists(unzip_dir_data):
         print("[INFO] %s does not exist, trying dowload zipped file %s" % 
               (unzip_dir_data, data_file))
         # check if .zip file present in locally
-        status, _ = maybe_download_data(remote_storage=data_storage, 
-                                        data_dir=data_dir, 
+        status, _ = maybe_download_data(remote_dir=remote_dir, 
+                                        local_dir=local_dir,
                                         data_file=data_file)
         # if .zip is present locally, de-archive it
-        file_path = os.path.join(cfg.BASE_DIR, data_dir, data_file)
+        file_path = os.path.join(local_dir, data_file)
         print(file_path)
         if os.path.exists(file_path):
             data_zip = zipfile.ZipFile(file_path, 'r')

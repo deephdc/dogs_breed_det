@@ -11,24 +11,18 @@ import dogs_breed_det.config as cfg
 import dogs_breed_det.dataset.data_utils as dutils
 
 
-def set_features_file(dataset_type, network='Resnet50', return_type='path'):
+def set_features_file(dataset_type, network='Resnet50'):
     """ Function
-        Returns according to the dataset_type and network either
-        directory with the file, filename, or full path to the file (default)
+        Returns according to the dataset_type and network 
+        the full path to the file
     """
-    # directory where file is, not the full path!
-    file_dir = os.path.join('data', 'bottleneck_features')
-    # only file name
+
+    # buld the file name
     file_name = 'Dogs_' + network + '_features_' + dataset_type + '.npz'
     # full path to the file
-    file_path = os.path.join(cfg.BASE_DIR, file_dir, file_name)
+    file_path = os.path.join(cfg.DATA_DIR, 'bottleneck_features', file_name)
 
-    if return_type == 'dir':
-        return file_dir
-    elif return_type == 'file':
-        return file_name
-    else:
-        return file_path
+    return file_path
 
 def build_features(data_type, network='Resnet50'):
     """Build bottleneck_features for set of files"""
@@ -40,7 +34,7 @@ def build_features(data_type, network='Resnet50'):
             'Xception': extract_Xception,
     }
 
-    data_dir = os.path.join(cfg.BASE_DIR,'data', cfg.Dog_DataDir, data_type)
+    data_dir = os.path.join(cfg.DATA_DIR, cfg.Dog_DataDir, data_type)
     img_files = dutils.load_data_files(data_dir)
     print("[DEBUG] build_features, img_files: ", img_files[:5])
 

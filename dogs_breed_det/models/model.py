@@ -265,10 +265,12 @@ def predict_file(img_path, network='Resnet50'):
     #prepare_data(network)
 
     weights_file = mutils.build_weights_filename(network)
-    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', weights_file) 
+    saved_weights_path = os.path.join(cfg.MODELS_DIR, weights_file) 
 
     # check if the weights file exists locally. if not -> try to download
-    status_weights, _ = dutils.maybe_download_data(data_dir='/models',
+    remote_dir = os.path.join(cfg.Dog_RemoteStorage, 'models')
+    status_weights, _ = dutils.maybe_download_data(remote_dir,
+                                                   local_dir=cfg.MODELS_DIR,
                                                    data_file=weights_file)
 
     # attempt to download default weights file                                                   
@@ -277,13 +279,16 @@ def predict_file(img_path, network='Resnet50'):
         url_weights = cfg.Dog_RemoteShare + weights_file
         status_weights, _ = dutils.url_download(
                                    url_path = url_weights, 
-                                   data_dir=os.path.join(cfg.BASE_DIR,'models'),
+                                   local_dir=cfg.MODELS_DIR,
                                    data_file=weights_file)
                                    
     dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
     # check if the labels file exists locally. if not -> try to download
-    status_dog_names, _ = dutils.maybe_download_data(data_dir='/data',
-                                                   data_file=dog_names_file)
+    remote_dir = os.path.join(cfg.Dog_RemoteStorage, 'data')
+    status_dog_names, _ = dutils.maybe_download_data(
+                                                  remote_dir,
+                                                  local_dir=cfg.DATA_DIR,
+                                                  data_file=dog_names_file)
 
     # attempt to download labels file                                                   
     if not status_dog_names:
@@ -291,7 +296,7 @@ def predict_file(img_path, network='Resnet50'):
         url_dog_names = cfg.Dog_RemoteShare + dog_names_file
         status_weights, _ = dutils.url_download(
                                    url_path = url_dog_names, 
-                                   data_dir=os.path.join(cfg.BASE_DIR,'data'),
+                                   local_dir=cfg.DATA_DIR,
                                    data_file=dog_names_file)                                   
 
     if status_weights:
@@ -434,7 +439,7 @@ def train(**kwargs):
         'test': len(test_targets)
         }
 
-    saved_weights_path = os.path.join(cfg.BASE_DIR, 'models', 
+    saved_weights_path = os.path.join(cfg.MODELS_DIR, 
                                       mutils.build_weights_filename(network))
     checkpointer = ModelCheckpoint(filepath=saved_weights_path, 
                                    verbose=1, save_best_only=True)
@@ -491,7 +496,7 @@ def train(**kwargs):
     print("[INFO] score: {}".format(acc))
 
     # copy trained weights back to nextcloud
-    dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/models'
+    dest_dir = cfg.REMOTE_MODELS_DIR
     print("[INFO] Upload %s to %s" % (saved_weights_path, dest_dir))
     dutils.rclone_copy(saved_weights_path, dest_dir)
     
