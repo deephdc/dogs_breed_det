@@ -9,10 +9,18 @@ from marshmallow import Schema, INCLUDE
 # identify basedir for the package
 BASE_DIR = os.path.dirname(os.path.normpath(os.path.dirname(__file__)))
 
-if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ and len(os.environ['APP_INPUT_OUTPUT_BASE_DIR']) > 1:
-    IN_OUT_BASE_DIR = os.environ['APP_INPUT_OUTPUT_BASE_DIR']
-else:
-    IN_OUT_BASE_DIR = BASE_DIR
+# default location for input and output data, e.g. directories 'data' and 'models',
+# is either set relative to the application path or via environment setting
+IN_OUT_BASE_DIR = BASE_DIR
+if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ:
+    env_in_out_base_dir = os.environ['APP_INPUT_OUTPUT_BASE_DIR']
+    if os.path.isdir(env_in_out_base_dir):
+        IN_OUT_BASE_DIR = env_in_out_base_dir
+    else:
+        msg = "[WARNING] \"APP_INPUT_OUTPUT_BASE_DIR=" + \
+        "{}\" is not a valid directory! ".format(env_in_out_base_dir) + \
+        "Using \"BASE_DIR={}\" instead.".format(BASE_DIR)
+        print(msg)
 
 DATA_DIR = os.path.join(IN_OUT_BASE_DIR, 'data')
 MODELS_DIR = os.path.join(IN_OUT_BASE_DIR, 'models')
