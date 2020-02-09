@@ -201,7 +201,7 @@ def maybe_download_and_unzip(remote_dir=os.path.join(cfg.REMOTE_DATA_DIR,
     if not os.path.exists(unzip_dir_data):
         print("[INFO] %s does not exist, trying dowload zipped file %s" % 
               (unzip_dir_data, data_file))
-        # check if .zip file present in locally
+        # check if .zip file present locally
         status, _ = maybe_download_data(remote_dir=remote_dir, 
                                         local_dir=local_dir,
                                         data_file=data_file)

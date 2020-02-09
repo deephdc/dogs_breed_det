@@ -39,8 +39,7 @@ def build_features(data_type, network='Resnet50'):
     print("[DEBUG] build_features, img_files: ", img_files[:5])
 
     bottleneck_features = nets[network](dutils.paths_to_tensor(img_files))
-    bottleneck_path = set_features_file(data_type, network,
-                                        return_type='path')
+    bottleneck_path = set_features_file(data_type, network)
 
     if data_type == 'train':
         np.savez(bottleneck_path, train=bottleneck_features)
