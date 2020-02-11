@@ -78,7 +78,7 @@ def prepare_data(network='Resnet50'):
    
     # check if dog_names file exists locally, if not -> download,
     # if not downloaded -> dutils.dog_names_create()
-    remote_dir = os.path.join(cfg.Dog_RemoteStorage, 'data')
+    remote_dir = cfg.REMOTE_DATA_DIR
     dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
     status_dog_names, _ = dutils.maybe_download_data(remote_dir,
                                                      local_dir=cfg.DATA_DIR,

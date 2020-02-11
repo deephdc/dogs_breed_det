@@ -268,7 +268,7 @@ def predict_file(img_path, network='Resnet50'):
     saved_weights_path = os.path.join(cfg.MODELS_DIR, weights_file) 
 
     # check if the weights file exists locally. if not -> try to download
-    remote_dir = os.path.join(cfg.Dog_RemoteStorage, 'models')
+    remote_dir = cfg.REMOTE_MODELS_DIR
     status_weights, _ = dutils.maybe_download_data(remote_dir,
                                                    local_dir=cfg.MODELS_DIR,
                                                    data_file=weights_file)
@@ -284,7 +284,7 @@ def predict_file(img_path, network='Resnet50'):
                                    
     dog_names_file = cfg.Dog_LabelsFile.split('/')[-1]
     # check if the labels file exists locally. if not -> try to download
-    remote_dir = os.path.join(cfg.Dog_RemoteStorage, 'data')
+    remote_dir = cfg.REMOTE_DATA_DIR
     status_dog_names, _ = dutils.maybe_download_data(
                                                   remote_dir,
                                                   local_dir=cfg.DATA_DIR,

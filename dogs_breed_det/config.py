@@ -25,14 +25,14 @@ if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ:
 DATA_DIR = os.path.join(IN_OUT_BASE_DIR, 'data')
 MODELS_DIR = os.path.join(IN_OUT_BASE_DIR, 'models')
     
-Dog_RemoteStorage = 'rshare:/deep-oc-apps/dogs_breed_det/'
+Dog_RemoteSpace = 'rshare:/deep-oc-apps/dogs_breed_det/'
 Dog_RemoteShare = 'https://nc.deep-hybrid-datacloud.eu/s/D7DLWcDsRoQmRMN/download?path=%2F&files='
 Dog_DataDir = 'dogImages'
 Dog_WeightsPattern = 'weights.best.NETWORK.3layers.hdf5'
 Dog_LabelsFile = os.path.join(DATA_DIR, 'dog_names.txt')
 
-REMOTE_DATA_DIR = os.path.join(Dog_RemoteStorage, 'data')
-REMOTE_MODELS_DIR = os.path.join(Dog_RemoteStorage, 'models')
+REMOTE_DATA_DIR = os.path.join(Dog_RemoteSpace, 'data')
+REMOTE_MODELS_DIR = os.path.join(Dog_RemoteSpace, 'models')
 
 machine_info = { 'cpu': '',
                  'gpu': '',

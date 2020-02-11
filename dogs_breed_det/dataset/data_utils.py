@@ -303,7 +303,7 @@ def dog_names_create(dataImagesTrain=os.path.join(cfg.DATA_DIR,
         for item in dog_names:
             listfile.write("%s\n" % item)
     
-    dest_dir = cfg.Dog_RemoteStorage.rstrip('/') + '/data'
+    dest_dir = cfg.REMOTE_DATA_DIR
     print("[INFO] Upload %s to %s" % (cfg.Dog_LabelsFile, dest_dir))
     rclone_copy(cfg.Dog_LabelsFile, dest_dir)
             
