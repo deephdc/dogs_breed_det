@@ -18,5 +18,5 @@ marshmallow
 py-cpuinfo
 psutil
 
-deepaas>=1.0.1
+deepaas>=1.2.1
 flaat>=0.5.1

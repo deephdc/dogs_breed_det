@@ -40,6 +40,9 @@ from sklearn.metrics import accuracy_score
 
 from aiohttp.web import HTTPBadRequest
 
+## DEEPaaS wrapper to get e.g. UploadedFile() object
+from deepaas.model.v2 import wrapper
+
 ## Authorization
 from flaat import Flaat
 flaat = Flaat()
@@ -83,8 +86,6 @@ def _fields_to_dict(fields_in):
         dict_out[key] = param
     return dict_out
 
-class EmptyObj():
-    pass
 
 class TimeHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -554,10 +555,10 @@ def main():
                         f_tmp.write(line)
         
             # create file object to mimic aiohttp workflow
-            file_obj = EmptyObj()
-            file_obj.name="data"
-            file_obj.filename = temp.name
-            file_obj.content_type=mimetypes.MimeTypes().guess_type(args.files)[0]
+            file_obj = wrapper.UploadedFile(name="data", 
+                                            filename = temp.name,
+                                            content_type=mimetypes.MimeTypes().guess_type(args.files)[0],
+                                            original_filename=args.files)
             args.files = file_obj
         
         results = predict(**vars(args))

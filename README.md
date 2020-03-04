@@ -1,7 +1,7 @@
 Dog's breed detector
 ==============================
 
-[![Build Status](https://jenkins.indigo-datacloud.eu/buildStatus/icon?job=Pipeline-as-code%2FDEEP-OC-org%2Fdogs_breed_det%2Fmaster)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/master/)
+[![Build Status](https://jenkins.indigo-datacloud.eu/buildStatus/icon?job=Pipeline-as-code%2FDEEP-OC-org%2Fdogs_breed_det%2Ftest)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/DEEP-OC-org/job/dogs_breed_det/job/test/)
 
 
 An application to identify Dog's breed, "Dogs breed detector", using deep learning. **133** breeds are known.
