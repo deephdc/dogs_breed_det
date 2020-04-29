@@ -43,6 +43,8 @@ from aiohttp.web import HTTPBadRequest
 ## DEEPaaS wrapper to get e.g. UploadedFile() object
 from deepaas.model.v2 import wrapper
 
+from functools import wraps
+
 ## Authorization
 from flaat import Flaat
 flaat = Flaat()
@@ -51,6 +53,9 @@ flaat = Flaat()
 debug_model = False 
 
 def _catch_error(f):
+    """Decorate function to return an error as HTTPBadRequest, in case
+    """
+    @wraps(f)    
     def wrap(*args, **kwargs):
         try:
             return f(*args, **kwargs)
