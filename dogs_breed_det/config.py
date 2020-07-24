@@ -34,6 +34,34 @@ Dog_LabelsFile = os.path.join(DATA_DIR, 'dog_names.txt')
 REMOTE_DATA_DIR = os.path.join(Dog_RemoteSpace, 'data')
 REMOTE_MODELS_DIR = os.path.join(Dog_RemoteSpace, 'models')
 
+# FLAAT needs a list of trusted OIDC Providers. Here is an extended example:
+#[
+#'https://b2access.eudat.eu/oauth2/',
+#'https://b2access-integration.fz-juelich.de/oauth2',
+#'https://unity.helmholtz-data-federation.de/oauth2/',
+#'https://login.helmholtz-data-federation.de/oauth2/',
+#'https://login-dev.helmholtz.de/oauth2/',
+#'https://login.helmholtz.de/oauth2/',
+#'https://unity.eudat-aai.fz-juelich.de/oauth2/',
+#'https://services.humanbrainproject.eu/oidc/',
+#'https://accounts.google.com/',
+#'https://aai.egi.eu/oidc/',
+#'https://aai-dev.egi.eu/oidc/',
+#'https://login.elixir-czech.org/oidc/',
+#'https://iam-test.indigo-datacloud.eu/',
+#'https://iam.deep-hybrid-datacloud.eu/',
+#'https://iam.extreme-datacloud.eu/',
+#'https://oidc.scc.kit.edu/auth/realms/kit/',
+#'https://proxy.demo.eduteams.org'
+#]
+#
+# we select following three providers:
+Flaat_trusted_OP_list = [
+'https://aai.egi.eu/oidc/',
+'https://iam.deep-hybrid-datacloud.eu/',
+'https://iam.extreme-datacloud.eu/',
+]
+
 machine_info = { 'cpu': '',
                  'gpu': '',
                  'memory_total': '',

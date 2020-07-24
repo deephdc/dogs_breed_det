@@ -48,6 +48,7 @@ from functools import wraps
 ## Authorization
 from flaat import Flaat
 flaat = Flaat()
+flaat.set_trusted_OP_list(cfg.Flaat_trusted_OP_list)
 
 # Switch for debugging in this script
 debug_model = False 
@@ -55,7 +56,7 @@ debug_model = False
 def _catch_error(f):
     """Decorate function to return an error as HTTPBadRequest, in case
     """
-    @wraps(f)    
+    @wraps(f)  
     def wrap(*args, **kwargs):
         try:
             return f(*args, **kwargs)
