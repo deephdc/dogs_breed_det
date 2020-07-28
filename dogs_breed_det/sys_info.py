@@ -28,8 +28,17 @@ def _collect_cpu_info(run_info):
     cpu_info["num_cores"] = multiprocessing.cpu_count()
 
     info = cpuinfo.get_cpu_info()
-    cpu_info["cpu_info"] = info["brand"]
-    cpu_info["mhz_per_cpu"] = info["hz_advertised_raw"][0] / 1.0e6
+    try:
+        cpu_info["cpu_info"] = info["brand"]
+    except:
+        # py-cpuinfo >v5.0.0
+        cpu_info["cpu_info"] = info["brand_raw"]
+
+    try:
+        cpu_info["mhz_per_cpu"] = info["hz_advertised_raw"][0] / 1.0e6
+    except:
+        # py-cpuinfo >v5.0.0
+        cpu_info["mhz_per_cpu"] = info["hz_advertised"][0] / 1.0e6
 
     run_info["cpu"] = cpu_info
 

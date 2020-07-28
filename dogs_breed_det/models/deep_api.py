@@ -48,6 +48,8 @@ from functools import wraps
 ## Authorization
 from flaat import Flaat
 flaat = Flaat()
+#flaat.set_verbosity(3)
+flaat.set_web_framework("aiohttp") # DEEP API V2 uses aiohttp, thus hard code
 flaat.set_trusted_OP_list(cfg.Flaat_trusted_OP_list)
 
 # Switch for debugging in this script
