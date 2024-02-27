@@ -1,3 +1,7 @@
+---
+# The Repository is ARCHIVED!
+### it is now maintained in https://github.com/ai4os-hub/dogs-breed-detector/
+---
 Dog's breed detector
 ==============================
 
